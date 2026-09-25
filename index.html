@@ -53,6 +53,10 @@ h1{font-size:clamp(30px,5vw,44px);font-weight:800;line-height:1.02;margin-top:10
 .controls-col{display:flex;flex-direction:column;gap:11px}
 .controls-col .ctl{min-width:0}
 .sim-right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.savebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:2px}
+.sbtn{appearance:none;font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.sbtn:hover{filter:brightness(1.06)}
+.sbtn.ghost{background:none;color:var(--muted);border-color:var(--line)}
 .sim-right .ekpis{margin-top:0}
 section{margin-top:40px}
 h2{font-size:21px;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px}
@@ -287,6 +291,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
         </div>
       </aside>
       <div class="sim-right">
+        <div class="savebar"><button class="sbtn" onclick="saveConfig('Simulator',this)">Save config</button><button class="sbtn" onclick="exportCSV()">Export CSV <span class="saveCount">(0)</span></button><button class="sbtn ghost" onclick="clearLog()">Clear log</button></div>
         <div class="ekpis" id="ekpis"></div>
         <h3>ILine net price vs competitors</h3>
     <p style="font-size:13px;color:var(--faint);margin-top:-2px">Like-for-like: ILine and every competitor are priced at the <strong>same distance — the scrape's avg km</strong> for each bucket (so no within-bucket distance mismatch). ILine net = after promo (+ surge in evening), for the session toggled above. Green = ILine cheaper. Competitor figures are quoted fares.</p>
@@ -340,6 +345,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
         </div>
       </aside>
       <div class="sim-right">
+        <div class="savebar"><button class="sbtn" onclick="saveConfig('Target',this)">Save config</button><button class="sbtn" onclick="exportCSV()">Export CSV <span class="saveCount">(0)</span></button><button class="sbtn ghost" onclick="clearLog()">Clear log</button></div>
         <div class="ekpis" id="ekpis2"></div>
         <h3>ILine net price vs competitors</h3>
         <p style="font-size:13px;color:var(--faint);margin-top:-2px">Solved tariff, priced at the scrape’s avg km per bucket. Net = gross × (1 − blended discount). Green = ILine cheaper.</p>
@@ -403,6 +409,7 @@ function renderKPIs(){
   const gAOV=grossAOV(SURGE), gDay=gAOV*OPD, eff=gAOV/avgDist;
   const mAOV=mornAOV(), eAOV=eveAOV(SURGE);
   const disc=blendedDisc(), nAOV=gAOV*(1-disc), nDay=nAOV*OPD;
+  window.SIM_KPI={mAOV:mAOV,eAOV:eAOV,gAOV:gAOV,disc:disc,gDay:gDay,nAOV:nAOV,nDay:nDay,eff:eff};
   document.getElementById('ekpis').innerHTML=`
     <div class="ekpi"><div class="lab">Morning AOV</div><div class="val mono">${money(mAOV)}</div><div class="sub2">avg ${mDist.toFixed(1)} km · no surge</div></div>
     <div class="ekpi"><div class="lab">Evening AOV</div><div class="val mono">${money(eAOV)}</div><div class="sub2">avg ${eDist.toFixed(1)} km${SURGE>0?' · +'+(SURGE*100).toFixed(0)+'% surge':''}</div></div>
@@ -453,7 +460,7 @@ function renderCompareTable(){
     body.appendChild(tr);
   }
   cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;
-  const dc=nW/cheapW-1, dp=nW/cP-1;
+  const dc=nW/cheapW-1, dp=nW/cP-1; window.SIM_COMP={gross:gW,net:nW,vsCheap:dc,vsPorter:dp};
   document.getElementById('cmpFoot').innerHTML=`<td>Blended</td><td></td>
     <td>${money(cP)}</td><td>${money(cD)}</td><td>${money(cU)}</td>
     <td>${money(gW)}</td><td>${money(nW)}</td>
@@ -495,7 +502,7 @@ function renderTargetTable(){
   for(b of BK){var km=SCRAPE_KM[b],g=tFare(km)*mult,n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
     cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
     body.insertAdjacentHTML('beforeend','<tr><td>'+b+' km</td><td style="color:var(--muted)">'+km+'</td><td>'+money(c.P)+'</td><td>'+money(c.D)+'</td><td>'+money(c.U)+'</td><td style="color:var(--muted)">'+money(g)+'</td><td style="font-weight:700">'+money(n)+'</td><td style="color:'+col(dC)+';font-weight:600">'+pct(dC)+'</td><td style="color:'+col(dP)+';font-weight:600">'+pct(dP)+'</td></tr>');}
-  cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;var dc=nW/cheapW-1,dp=nW/cP-1;
+  cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;var dc=nW/cheapW-1,dp=nW/cP-1;window.TGT_COMP={gross:gW,net:nW,vsCheap:dc,vsPorter:dp};
   document.getElementById('cmpFoot2').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td>'+money(cD)+'</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
 }
 function renderTargetChart(){
@@ -519,7 +526,7 @@ function renderTarget(){
   var r=solveT(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
   if(LASTFREE==='base'){document.getElementById('rpk2').value=Math.round(RPK2);document.getElementById('rpk2Out').textContent='₹'+RPK2.toFixed(1);}
   else{document.getElementById('base2').value=Math.round(BASE2/5)*5;document.getElementById('base2Out').textContent='₹'+Math.round(BASE2);}
-  var gAOV=grossAOV_T(),nDay=gAOV*(1-disc)*OPDT;
+  var gAOV=grossAOV_T(),nDay=gAOV*(1-disc)*OPDT;window.TGT_KPI={netAOV:netAOV,disc:disc,reqGross:reqGross,eff:reqGross/AVGD,gAOV:gAOV,nDay:nDay};
   document.getElementById('ekpis2').innerHTML=
    '<div class="ekpi"><div class="lab">Target net AOV</div><div class="val mono">'+money(netAOV)+'</div><div class="sub2">'+money(TNR)+'/day / OPD '+OPDT+'</div></div>'
   +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(T_DN*100).toFixed(0)+'% acq &middot; '+(T_DR*100).toFixed(0)+'% ret &middot; '+(T_DM*100).toFixed(0)+'% &lt;1PM</div></div>'
@@ -540,6 +547,35 @@ document.getElementById('base2').addEventListener('input',function(e){BASE2=+e.t
 document.getElementById('rpk2').addEventListener('input',function(e){RPK2=+e.target.value;LASTFREE='rpk';document.getElementById('rpk2Out').textContent='₹'+RPK2;renderTarget();});
 document.querySelectorAll('.segbtn[data-tsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-tsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESS2=b.dataset.tsess;renderTarget();});});
 renderTarget();
+
+/* ===== Save config log (CSV export) ===== */
+var LOGKEY='iline_pricing_config_log_v1',configLog=[];
+try{var _st=localStorage.getItem(LOGKEY);if(_st)configLog=JSON.parse(_st)||[];}catch(e){}
+function updateSaveCount(){var n=configLog.length;document.querySelectorAll('.saveCount').forEach(function(s){s.textContent='('+n+')';});}
+function nowStamp(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
+var CSV_COLS=['saved_at','mode','session','base_fare','rate_per_km','opd','target_gross_per_day','target_net_per_day','evening_surge_pct','new_share_pct','acquisition_disc_pct','retention_disc_pct','morning_disc_pct','morning_aov','evening_aov','blended_aov','blended_disc_pct','gross_per_day','net_aov','net_per_day','target_net_aov','required_gross_aov','effective_rs_per_km','iline_gross_blended','iline_net_blended','vs_cheapest_pct','vs_porter_pct'];
+function saveConfig(mode,btn){
+  var row;
+  if(mode==='Simulator'){var k=window.SIM_KPI||{},cm=window.SIM_COMP||{};
+    row={saved_at:nowStamp(),mode:mode,session:SESS,base_fare:Math.round(BASE),rate_per_km:RPK,opd:OPD,target_gross_per_day:TARGET,target_net_per_day:'',evening_surge_pct:(SURGE*100).toFixed(1),new_share_pct:Math.round(NEWSHARE*100),acquisition_disc_pct:Math.round(DNEW*100),retention_disc_pct:Math.round(DRET*100),morning_disc_pct:Math.round(DMORN*100),morning_aov:Math.round(k.mAOV||0),evening_aov:Math.round(k.eAOV||0),blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round(k.gDay||0),net_aov:Math.round(k.nAOV||0),net_per_day:Math.round(k.nDay||0),target_net_aov:'',required_gross_aov:'',effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+  }else{var k=window.TGT_KPI||{},cm=window.TGT_COMP||{};
+    row={saved_at:nowStamp(),mode:mode,session:SESS2,base_fare:Math.round(BASE2),rate_per_km:+RPK2.toFixed(1),opd:OPDT,target_gross_per_day:'',target_net_per_day:TNR,evening_surge_pct:(T_SG*100).toFixed(1),new_share_pct:Math.round(T_NS*100),acquisition_disc_pct:Math.round(T_DN*100),retention_disc_pct:Math.round(T_DR*100),morning_disc_pct:Math.round(T_DM*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*OPDT),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+  }
+  configLog.push(row);try{localStorage.setItem(LOGKEY,JSON.stringify(configLog));}catch(e){}updateSaveCount();
+  if(btn){var t=btn.textContent;btn.textContent='Saved ✓';setTimeout(function(){btn.textContent=t;},900);}
+}
+function exportCSV(){
+  if(!configLog.length){alert('No saved configs yet — click "Save config" first.');return;}
+  var esc=function(v){v=(v==null?'':''+v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  var lines=[CSV_COLS.join(',')];
+  configLog.forEach(function(r){lines.push(CSV_COLS.map(function(col){return esc(r[col]);}).join(','));});
+  var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='iline_pricing_config_'+nowStamp().replace(/[: ]/g,'-')+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+function clearLog(){if(configLog.length&&!confirm('Clear all '+configLog.length+' saved rows?'))return;configLog=[];try{localStorage.removeItem(LOGKEY);}catch(e){}updateSaveCount();}
+updateSaveCount();
 
 document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
