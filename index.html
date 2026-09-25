@@ -1,0 +1,553 @@
+<meta charset="utf-8">
+<title>Earnings-Target Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F5F4F0; --surface:#FFFFFF; --surface-2:#FBFAF7; --line:#E4E1D9;
+  --ink:#1B2026; --muted:#5C6670; --faint:#8A939C;
+  --accent:#C9720A; --accent-soft:#c9720a14; --accent-line:#c9720a40;
+  --good:#2E9E5B; --good-bg:#2e9e5b16; --bad:#C6413A; --bad-bg:#c6413a14;
+  --porter:#B0563B; --delh:#4B6BB0; --ud:#8A6DB0; --curr:#7A828C;
+  --shadow:0 1px 2px rgba(20,26,32,.04),0 4px 16px rgba(20,26,32,.05);
+  --radius:12px;
+}
+:root:not([data-theme="light"]){@media (prefers-color-scheme: dark){
+  --paper:#12151A; --surface:#191D24; --surface-2:#1F242C; --line:#2C333D;
+  --ink:#ECEFF3; --muted:#9BA5B0; --faint:#6C7783;
+  --accent:#E0952F; --accent-soft:#e0952f1c; --accent-line:#e0952f45;
+  --good:#43BE74; --good-bg:#43be7420; --bad:#E36158; --bad-bg:#e3615820;
+  --porter:#D0745A; --delh:#7B96D8; --ud:#AD8DD8; --curr:#6C7783;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.28);
+}}
+:root[data-theme="dark"]{
+  --paper:#12151A; --surface:#191D24; --surface-2:#1F242C; --line:#2C333D;
+  --ink:#ECEFF3; --muted:#9BA5B0; --faint:#6C7783;
+  --accent:#E0952F; --accent-soft:#e0952f1c; --accent-line:#e0952f45;
+  --good:#43BE74; --good-bg:#43be7420; --bad:#E36158; --bad-bg:#e3615820;
+  --porter:#D0745A; --delh:#7B96D8; --ud:#AD8DD8; --curr:#6C7783;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.doc{max-width:800px;margin:0 auto;padding:56px 26px 90px}
+h1,h2,h3{font-family:"Archivo",system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--accent);font-weight:600}
+
+header{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:8px}
+h1{font-size:clamp(30px,5vw,44px);font-weight:800;line-height:1.02;margin-top:10px;text-wrap:balance}
+.sub{color:var(--muted);margin-top:12px;max-width:60ch}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--faint);margin-top:16px;font-family:"IBM Plex Mono",monospace}
+.meta .dot{width:3px;height:3px;border-radius:50%;background:var(--faint)}
+
+.tabs{display:flex;gap:4px;margin:18px 0 4px;border-bottom:1px solid var(--line)}
+.tabbtn{appearance:none;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:"Archivo",sans-serif;font-weight:700;font-size:15px;padding:9px 16px;cursor:pointer;margin-bottom:-1px;letter-spacing:-.01em}
+.tabbtn:hover{color:var(--ink)}
+.tabbtn.active{color:var(--ink);border-bottom-color:var(--accent)}
+#tab-sim{width:min(1220px,95vw);position:relative;left:50%;transform:translateX(-50%);margin-top:20px}
+.sim{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+@media(max-width:880px){.sim{grid-template-columns:1fr}}
+.sim-left{position:sticky;top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px}
+.controls-col{display:flex;flex-direction:column;gap:11px}
+.controls-col .ctl{min-width:0}
+.sim-right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sim-right .ekpis{margin-top:0}
+section{margin-top:40px}
+h2{font-size:21px;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px}
+h2 .n{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);font-weight:600}
+h3{font-size:15px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 8px}
+p{margin:10px 0}
+strong{font-weight:600}
+.lead{border-left:3px solid var(--accent);padding-left:16px;color:var(--ink)}
+
+.formula{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin:16px 0;font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.9;overflow-x:auto;white-space:pre;color:var(--ink)}
+.formula b{color:var(--accent);font-weight:600}
+
+.rules{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:14px}
+.rule{background:var(--surface);padding:12px 16px;display:flex;gap:14px;align-items:center;font-size:14px}
+.rule .cond{font-family:"IBM Plex Mono",monospace;font-weight:600;min-width:190px}
+.rule.up{color:var(--bad)} .rule.down{color:var(--good)} .rule.eq{color:var(--muted)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:13.5px}
+th,td{padding:10px 14px;text-align:right;white-space:nowrap}
+th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);background:var(--surface-2)}
+th:first-child,td:first-child{text-align:left;font-weight:600}
+td{border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace}
+tbody tr:last-child td{border-bottom:none}
+.foot td{font-weight:700;background:var(--surface-2);border-top:2px solid var(--line)}
+.hit td{background:var(--good-bg);color:var(--good);font-weight:700}
+caption{caption-side:bottom;text-align:left;font-size:12px;color:var(--faint);padding:8px 2px;font-style:italic}
+
+.datagrid{display:grid;grid-template-columns:180px 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:14px;font-size:13.5px}
+.datagrid div{background:var(--surface);padding:9px 14px}
+.datagrid .k{font-weight:600;color:var(--muted)}
+.datagrid .v{font-family:"IBM Plex Mono",monospace}
+
+.result{background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--radius);padding:20px 22px;margin-top:16px}
+.result h3{color:var(--accent);margin-top:0}
+.result ul{margin:8px 0 0;padding-left:20px} .result li{margin:7px 0}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--faint);border-radius:var(--radius);padding:14px 18px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+ul.open{padding-left:20px} ul.open li{margin:8px 0}
+.tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--good-bg);color:var(--good)}
+.tag.zero{background:var(--bad-bg);color:var(--bad)}
+footer{margin-top:56px;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--faint)}
+
+/* interactive */
+.controls{display:flex;gap:22px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;margin-top:16px}
+.ctl{display:flex;flex-direction:column;gap:5px;min-width:150px}
+.ctl label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;gap:10px}
+.ctl label b{color:var(--accent);font-family:"IBM Plex Mono",monospace}
+input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:5px;background:var(--line);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface)}
+.numin{font-family:"IBM Plex Mono",monospace;font-size:14px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;width:96px}
+.ekpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-top:14px}
+.ekpi{background:var(--surface);padding:14px 16px}
+.ekpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:600}
+.ekpi .val{font-family:"Archivo",sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;margin-top:3px;line-height:1}
+.ekpi .sub2{font-size:11.5px;color:var(--muted);margin-top:5px}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;font-family:"IBM Plex Mono",monospace}
+.pill.good{color:var(--good);background:var(--good-bg)} .pill.bad{color:var(--bad);background:var(--bad-bg)}
+.chartcard{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--surface);padding:16px 18px;margin-top:16px}
+.chart-ctrl{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:3px}
+.segbtn{appearance:none;background:none;border:none;color:var(--muted);font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:13px;padding:5px 16px;border-radius:6px;cursor:pointer}
+.segbtn.active{background:var(--accent);color:#fff}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:15px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.legend .band{width:15px;height:10px;border-radius:2px;opacity:.5}
+svg{display:block;width:100%;height:auto}
+.gridline{stroke:var(--line);stroke-width:1}
+.axlab{fill:var(--faint);font-size:10px;font-family:"IBM Plex Mono",monospace}
+.mline{fill:none}
+@media print{body{background:#fff}.doc{padding:0}.formula,.result,.tablewrap,.chartcard,.ekpis,.controls{box-shadow:none}}
+</style>
+
+<div class="doc">
+  <header>
+    <div class="eyebrow">ILine · 3-Wheeler · Noida · Pricing brief</div>
+    <h1>Strategy B — Price to a Daily Earnings Target</h1>
+    <p class="sub">How the 3-wheeler tariff is set so an average vehicle clears its daily earnings target — and why the fix is a small evening surge, not a price hike.</p>
+    <div class="meta">
+      <span>Basis: real completed orders</span><span class="dot"></span>
+      <span>iline_riderequests_v2</span><span class="dot"></span>
+      <span>Noida · 3W · last 15 days</span><span class="dot"></span>
+      <span>all-day</span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tabbtn active" data-tab="data">Data</button>
+    <button class="tabbtn" data-tab="sim">Simulator</button>
+    <button class="tabbtn" data-tab="target">Target</button>
+  </div>
+
+  <div id="tab-data">
+
+  <section>
+    <h2><span class="n">01</span> Objective</h2>
+    <p class="lead">Set the tariff so an average vehicle clears a target daily earning (<strong>₹1,500/day</strong>) at its breakeven order rate — then decide whether pricing should move up or down.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span> The core identity</h2>
+    <div class="formula">Daily earning / vehicle  =  <b>Real AOV</b>  ×  <b>OPD</b>
+
+Target: ₹1,500/day  at  breakeven OPD = 3   →   required AOV = ₹500 / order</div>
+    <p><strong>AOV</strong> = average order value = average <span class="mono">grossFare</span> per completed order.&nbsp; <strong>OPD</strong> = orders per vehicle per day (breakeven assumption = 3).</p>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span> Decision rule</h2>
+    <div class="rules">
+      <div class="rule down"><span class="cond">AOV × OPD &gt; Target</span><span>surplus → room to <strong>decrease</strong> price (be more competitive)</span></div>
+      <div class="rule up"><span class="cond">AOV × OPD &lt; Target</span><span>shortfall → <strong>increase</strong> price, or add surge</span></div>
+      <div class="rule eq"><span class="cond">AOV × OPD ≈ Target</span><span>already priced at the floor</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span> AOV decomposition</h2>
+    <div class="formula">AOV  =  avg trip distance (km)  ×  effective ₹ per km</div>
+    <p>Effective ₹/km = <span class="mono">AOV / avg_distance</span>. It is <strong>not</strong> a tariff slab rate — it is the blended realised rate, and it falls with distance because the fixed base fare is amortised over more kilometres (short trips carry a high ₹/km, long trips a low one). To lift AOV at constant distance, raise the effective rate — equivalently, nudge the base fare, which lifts every order equally.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span> Data basis</h2>
+    <div class="datagrid">
+      <div class="k">Table</div><div class="v">iline_riderequests_v2 (V2, is_current_status = true)</div>
+      <div class="k">Population</div><div class="v">cityName = 'Noida', numberOfVehicleType = 3</div>
+      <div class="k">Completed</div><div class="v">requestStatus IN ('COMPLETED','ENDED')</div>
+      <div class="k">Fare</div><div class="v">grossFare (GMV, incl. surge / waiting / add-ons)</div>
+      <div class="k">Distance</div><div class="v">distance (trip km), filtered 0 &lt; d ≤ 120</div>
+      <div class="k">Window</div><div class="v">last 15 days (rolling)</div>
+      <div class="k">Time basis</div><div class="v">all-day — a vehicle earns across the whole day</div>
+      <div class="k">Morning / evening</div><div class="v">HOUR(bookingCreatedAt) &lt; 15 = morning (IST; no CONVERT_TZ)</div>
+    </div>
+    <div class="callout"><strong>Why all-day, not morning-only.</strong> Morning trips are longer and higher-AOV; using morning-only AOV overstates the daily number and can flip the decision. A per-day target must use the all-day AOV.</div>
+    <div class="callout"><strong>Not a real distribution.</strong> The 141-row "KM bucket wise orders" sheet was dummy pick/drop points used to scrape competitor apps — it is not a real order distribution and is not used to weight anything here.</div>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span> Trip-distance buckets</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>KM bucket</th><th>orders</th><th>share</th><th>avg km</th><th>Real AOV</th><th>₹ / km</th></tr></thead>
+        <tbody>
+          <tr><td>0–5</td><td>65</td><td>17.3%</td><td>2.8</td><td>₹286</td><td>₹102.2</td></tr>
+          <tr><td>5–10</td><td>86</td><td>22.9%</td><td>7.9</td><td>₹369</td><td>₹46.8</td></tr>
+          <tr><td>10–15</td><td>91</td><td>24.3%</td><td>12.6</td><td>₹467</td><td>₹37.2</td></tr>
+          <tr><td>15–20</td><td>55</td><td>14.7%</td><td>17.7</td><td>₹576</td><td>₹32.6</td></tr>
+          <tr><td>20–25</td><td>36</td><td>9.6%</td><td>21.6</td><td>₹667</td><td>₹30.8</td></tr>
+          <tr><td>25–40</td><td>41</td><td>10.9%</td><td>30.6</td><td>₹862</td><td>₹28.2</td></tr>
+          <tr><td>40+</td><td>1</td><td>0.3%</td><td>45.0</td><td>₹1,085</td><td>₹24.1</td></tr>
+        </tbody>
+        <tfoot><tr class="foot"><td>Blended</td><td>375</td><td>100%</td><td>13.5</td><td>₹493</td><td>₹36.5</td></tr></tfoot>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--faint);margin-top:8px">The old single 25+ bucket (avg 46 km) was split into 25–40 and 40+. The ₹/km falls from ₹102 to ₹24 across the range — that is the base fare being amortised over distance.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span> The evening-surge lever</h2>
+    <p>ILine currently runs <span class="tag zero">~0% evening surge</span> — at the same distance bucket, evening AOV ≈ morning AOV (within ±3%). The lower <em>overall</em> evening AOV is a distance-mix effect (evening trips are shorter), not a pricing one.</p>
+    <p>The Strategy-B lever is an <strong>evening surge on orders after 3 PM</strong> (~42% of orders), which lifts all-day AOV without touching morning pricing:</p>
+    <div class="formula">all-day AOV(surge) = [ Σ(morning_orders × morning_AOV)
+                     + Σ(evening_orders × evening_AOV × (1 + surge)) ] / total_orders
+
+surge to hit target = ( Target/OPD × total − morning_contrib ) / evening_contrib₀ − 1</div>
+    <div class="tablewrap">
+      <table>
+        <caption>Competitors already run ~17% evening surge, so there is large headroom.</caption>
+        <thead><tr><th>Evening surge</th><th>All-day AOV</th><th>₹ / vehicle / day</th></tr></thead>
+        <tbody>
+          <tr><td>0% (today)</td><td>₹493</td><td>₹1,479</td></tr>
+          <tr class="hit"><td>3.8%</td><td>₹500</td><td>₹1,500</td></tr>
+          <tr><td>5%</td><td>₹502</td><td>₹1,507</td></tr>
+          <tr><td>10%</td><td>₹512</td><td>₹1,535</td></tr>
+          <tr><td>15%</td><td>₹521</td><td>₹1,562</td></tr>
+          <tr><td>17% (market)</td><td>₹525</td><td>₹1,574</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">08</span> Discount layer</h2>
+    <div class="callout" style="border-left-color:var(--accent)"><strong>The discount finding.</strong> ILine funds a <strong>~22% promo on ~100% of rides</strong> (avg ₹109 on ₹492 gross). The driver still earns the full gross, so the vehicle clears ~₹1,476/day — but ILine's net realization is only <strong>~₹1,149/day, ₹351 under target</strong>. And <strong>94.5% of rides are retained customers</strong> discounted ~22% — the biggest lever is trimming the retained discount, not acquisition.</div>
+    <div class="formula">Ride discount   =  before 1 PM: max(segment %, morning %)   ·   1 PM onward: segment %   <span style="color:var(--faint)"># higher wins, never stacked</span>
+Blended disc %  =  36.5% (before 1 PM) · [ s_new·max(d_new,d_morn) + s_ret·max(d_ret,d_morn) ]  +  63.5% (1 PM+) · [ s_new·d_new + s_ret·d_ret ]
+<b>Net AOV</b>         =  Gross AOV × (1 − blended discount %)
+Gross ₹/day     =  Gross AOV × OPD        <span style="color:var(--faint)"># driver earning</span>
+Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># ILine realization</span></div>
+  </section>
+
+  <section>
+    <h2><span class="n">09</span> Result</h2>
+    <div class="result">
+      <h3>Where ILine stands today</h3>
+      <ul>
+        <li>Real AOV ≈ <strong>₹493/order</strong> → ₹493 × 3 = <strong>₹1,479/day</strong> → <strong>₹21 short</strong> of ₹1,500.</li>
+        <li>Decomposition: ₹493 = <strong>13.5 km × ₹36.5/km</strong>; target ₹500 needs <strong>+₹0.5/km</strong> (≈ <strong>+₹7 base fare</strong>).</li>
+        <li>A cost tariff re-solved to hit ₹1,500 under the real mix lands <strong>≈ ILine's current tariff</strong> — current pricing is already at the earnings floor.</li>
+        <li><strong>The evening surge closes the gap on its own:</strong> a <strong>~3.8% surge</strong> (or flat <strong>+₹17/evening order</strong>) → ₹1,500/day, with no change to morning pricing and still below competitors' evening fares.</li>
+      </ul>
+    </div>
+    <p style="margin-top:16px"><strong>Conclusion.</strong> Strategy B does not call for a morning price increase. It calls for introducing a <strong>modest evening surge</strong> (currently zero) on the ~42% of orders after 3 PM. A conservative 5–10% surge clears ₹1,500/day comfortably while keeping ILine the cheapest player in the evening.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">10</span> Open items</h2>
+    <ul class="open">
+      <li>Tighten the "evening" window from "after 3 PM" to a true peak band (e.g. 6–9 PM) — fewer orders would carry the surge, so the surge % to hit target would rise.</li>
+      <li>Confirm whether ₹1,500 is <strong>fare revenue (GMV)</strong> or <strong>driver take-home net of commission</strong> — if the latter, divide the target by (1 − commission) first.</li>
+      <li>Strategy A (match the market) to be documented separately.</li>
+    </ul>
+  </section>
+
+  </div><!-- /tab-data -->
+
+  <div id="tab-sim" hidden>
+    <div class="sim">
+      <aside class="sim-left">
+        <h3 style="margin-top:0">Variables</h3>
+        <div class="controls-col">
+          <div class="ctl"><label>Base fare ₹ <b id="baseOut">235</b></label><input type="range" id="base" min="0" max="500" step="5" value="235"></div>
+      <div class="ctl"><label>Rate ₹ / km <b id="rpkOut">19</b></label><input type="range" id="rpk" min="0" max="60" step="1" value="19"></div>
+      <div class="ctl"><label>Orders / vehicle / day <b id="opdOut">3</b></label><input type="range" id="opd" min="1" max="8" step="0.5" value="3"></div>
+      <div class="ctl"><label for="target">Target ₹ / vehicle / day</label><input class="numin" type="number" id="target" value="1500" step="50"></div>
+      <div class="ctl"><label>Evening surge (after 3 PM) <b id="surgeOut">0%</b></label><input type="range" id="surge" min="0" max="25" step="0.5" value="0"></div>
+      <div class="ctl"><label>New-customer share <b id="nsOut">6%</b></label><input type="range" id="nshare" min="0" max="60" step="1" value="6"></div>
+      <div class="ctl"><label>New-customer discount <b id="dnOut">21%</b></label><input type="range" id="dnew" min="0" max="50" step="1" value="21"></div>
+      <div class="ctl"><label>Retained discount <b id="drOut">22%</b></label><input type="range" id="dret" min="0" max="50" step="1" value="22"></div>
+      <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOut">0%</b></label><input type="range" id="dmorn" min="0" max="50" step="1" value="0"></div>
+        </div>
+      </aside>
+      <div class="sim-right">
+        <div class="ekpis" id="ekpis"></div>
+        <h3>ILine net price vs competitors</h3>
+    <p style="font-size:13px;color:var(--faint);margin-top:-2px">Like-for-like: ILine and every competitor are priced at the <strong>same distance — the scrape's avg km</strong> for each bucket (so no within-bucket distance mismatch). ILine net = after promo (+ surge in evening), for the session toggled above. Green = ILine cheaper. Competitor figures are quoted fares.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>KM bucket</th><th>km</th>
+          <th style="color:var(--porter)">Porter</th><th style="color:var(--delh)">Delhivery</th><th style="color:var(--ud)">Uncle&nbsp;D.</th>
+          <th>ILine gross</th><th>ILine net</th>
+          <th>vs cheapest</th><th>vs Porter</th>
+        </tr></thead>
+        <tbody id="cmpBody"></tbody>
+        <tfoot><tr class="foot" id="cmpFoot"></tr></tfoot>
+      </table>
+    </div>
+        <div class="chartcard">
+      <div class="chart-ctrl">
+        <div class="seg" role="tablist"><button class="segbtn" data-sess="morning">Morning</button><button class="segbtn active" data-sess="evening">Evening</button></div>
+        <div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div>
+      </div>
+      <div class="legend">
+        <span><i class="band" style="background:var(--delh)"></i>Competitor range</span>
+        <span><i style="background:var(--porter)"></i>Porter <i style="background:var(--delh)"></i>Delh <i style="background:var(--ud)"></i>UD</span>
+        <span><b style="color:var(--ink)">◆</b> Real AOV</span>
+        <span><i style="background:var(--curr)"></i>ILine tariff <span style="color:var(--faint)">(+surge in eve)</span></span>
+        <span><span style="display:inline-block;width:15px;border-top:2px dashed var(--accent);vertical-align:middle;margin-right:5px"></span>ILine net <span style="color:var(--faint)">(after discount)</span></span>
+      </div>
+      <div id="chart"></div>
+    </div>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-target" hidden>
+    <div class="sim">
+      <aside class="sim-left">
+        <h3 style="margin-top:0">Target → Tariff</h3>
+        <div class="controls-col">
+          <div class="ctl"><label for="tnr">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnr" value="1500" step="50"></div>
+          <div class="ctl"><label>Orders / vehicle / day <b id="opdtOut">3</b></label><input type="range" id="opdt" min="1" max="8" step="0.5" value="3"></div>
+          <div class="ctl"><label>New-customer share <b id="ns2Out">6%</b></label><input type="range" id="nshare2" min="0" max="60" step="1" value="6"></div>
+          <div class="ctl"><label>Acquisition discount &middot; new <b id="dn2Out">21%</b></label><input type="range" id="dnew2" min="0" max="50" step="1" value="21"></div>
+          <div class="ctl"><label>Retention discount <b id="dr2Out">22%</b></label><input type="range" id="dret2" min="0" max="50" step="1" value="22"></div>
+          <div class="ctl"><label>Morning discount &middot; before 1 PM <b id="dm2Out">0%</b></label><input type="range" id="dmorn2" min="0" max="50" step="1" value="0"></div>
+          <div class="ctl"><label>Evening surge &middot; after 3 PM <b id="sg2Out">0%</b></label><input type="range" id="surge2" min="0" max="25" step="0.5" value="0"></div>
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move either — the other solves to keep AOV on target ↓</div>
+          <div class="ctl"><label>Base fare ₹ <b id="base2Out">235</b></label><input type="range" id="base2" min="0" max="700" step="5" value="235"></div>
+          <div class="ctl"><label>Rate ₹ / km <b id="rpk2Out">30</b></label><input type="range" id="rpk2" min="0" max="80" step="1" value="30"></div>
+        </div>
+      </aside>
+      <div class="sim-right">
+        <div class="ekpis" id="ekpis2"></div>
+        <h3>ILine net price vs competitors</h3>
+        <p style="font-size:13px;color:var(--faint);margin-top:-2px">Solved tariff, priced at the scrape’s avg km per bucket. Net = gross × (1 − blended discount). Green = ILine cheaper.</p>
+        <div class="tablewrap"><table>
+        <thead><tr>
+          <th>KM bucket</th><th>km</th>
+          <th style="color:var(--porter)">Porter</th><th style="color:var(--delh)">Delhivery</th><th style="color:var(--ud)">Uncle&nbsp;D.</th>
+          <th>ILine gross</th><th>ILine net</th>
+          <th>vs cheapest</th><th>vs Porter</th>
+        </tr></thead>
+          <tbody id="cmpBody2"></tbody>
+          <tfoot><tr class="foot" id="cmpFoot2"></tr></tfoot>
+        </table></div>
+        <div class="chartcard">
+          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-tsess="morning">Morning</button><button class="segbtn active" data-tsess="evening">Evening</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div></div>
+          <div class="legend">
+        <span><i class="band" style="background:var(--delh)"></i>Competitor range</span>
+        <span><i style="background:var(--porter)"></i>Porter <i style="background:var(--delh)"></i>Delh <i style="background:var(--ud)"></i>UD</span>
+        <span><b style="color:var(--ink)">◆</b> Real AOV</span>
+        <span><i style="background:var(--curr)"></i>ILine tariff</span>
+        <span><span style="display:inline-block;width:15px;border-top:2px dashed var(--accent);vertical-align:middle;margin-right:5px"></span>ILine net <span style="color:var(--faint)">(after discount)</span></span>
+      </div>
+          <div id="chart2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ILine 3-wheeler pricing · Strategy B brief · figures from real completed orders (Noida 3W, last 15 days). Long-haul buckets (25–40, 40+) are thin — treat as indicative.</footer>
+</div>
+
+<script>
+const BK=["0-5","5-10","10-15","15-20","20-25","25-40","40+"];
+const AVGKM={"0-5":2.8,"5-10":7.9,"10-15":12.6,"15-20":17.7,"20-25":21.6,"25-40":30.6,"40+":45.0}; // ILine real avg km (for AOV/earnings)
+const SCRAPE_KM={"0-5":2.6,"5-10":7.4,"10-15":12.2,"15-20":17.9,"20-25":22.5,"25-40":31.0,"40+":53.4}; // dummy-route avg km (competitor comparison at same distance)
+const COMP={ "0-5":{P:391,D:340,U:402},"5-10":{P:419,D:413,U:493},"10-15":{P:563,D:459,U:498},"15-20":{P:615,D:648,U:557},"20-25":{P:664,D:764,U:558},"25-40":{P:848,D:1011,U:761},"40+":{P:1353,D:1446,U:1126} };
+const COMP_E={ "0-5":{P:498,D:490,U:443},"5-10":{P:600,D:588,U:489},"10-15":{P:626,D:674,U:438},"15-20":{P:871,D:821,U:544},"20-25":{P:959,D:961,U:592},"25-40":{P:1023,D:1087,U:706},"40+":{P:1533,D:1591,U:1137} };
+const RAOV={ "0-5":289,"5-10":369,"10-15":473,"15-20":574,"20-25":661,"25-40":856,"40+":1085 };
+const RAOV_E={ "0-5":283,"5-10":370,"10-15":457,"15-20":579,"20-25":675,"25-40":899,"40+":null };
+const mOrders={ "0-5":28,"5-10":46,"10-15":54,"15-20":33,"20-25":21,"25-40":36,"40+":1 };
+const mAov=RAOV, eOrders={ "0-5":37,"5-10":40,"10-15":37,"15-20":22,"20-25":15,"25-40":5,"40+":0 };
+const eAov={ "0-5":283,"5-10":370,"10-15":457,"15-20":579,"20-25":675,"25-40":899,"40+":0 };
+let BASE=235, RPK=19; // ILine tariff: fare = base + rate/km × km  (default ≈ real ₹235 + ₹19/km)
+function iFare(km){return BASE+RPK*km;}
+let total=0,eOrdTot=0,mOrdTot=0,distSum=0,mDistSum=0,eDistSum=0;
+for(const b of BK){total+=mOrders[b]+eOrders[b];mOrdTot+=mOrders[b];eOrdTot+=eOrders[b];distSum+=(mOrders[b]+eOrders[b])*AVGKM[b];mDistSum+=mOrders[b]*AVGKM[b];eDistSum+=eOrders[b]*AVGKM[b];}
+const avgDist=distSum/total, mDist=mDistSum/mOrdTot, eDist=eDistSum/eOrdTot;
+let OPD=3,TARGET=1500,SURGE=0,SESS='evening';
+let NEWSHARE=0.06,DNEW=0.21,DRET=0.22,DMORN=0; // discount mix (real 15d defaults); morning discount default 0
+const mornAOV=()=>{let t=0;for(const b of BK)t+=mOrders[b]*iFare(AVGKM[b]);return t/mOrdTot;};   // morning: no surge
+const eveAOV=s=>{let t=0;for(const b of BK)t+=eOrders[b]*iFare(AVGKM[b])*(1+s);return t/eOrdTot;}; // evening: + surge
+const grossAOV=s=>(mOrdTot*mornAOV()+eOrdTot*eveAOV(s))/total;
+// each ride takes the HIGHER of its segment discount and (morning only) the morning discount — never stacked
+const segEveDisc=()=>NEWSHARE*DNEW+(1-NEWSHARE)*DRET;                                  // evening: segment only
+const segMornDisc=()=>NEWSHARE*Math.max(DNEW,DMORN)+(1-NEWSHARE)*Math.max(DRET,DMORN); // morning: max(segment, morning)
+const MDISC_FRAC=0.365; // rides created before 1 PM = morning-discount fence (AOV & evening surge stay at 3 PM)
+const blendedDisc=()=>MDISC_FRAC*segMornDisc()+(1-MDISC_FRAC)*segEveDisc();
+function money(v){return "₹"+Math.round(v).toLocaleString("en-IN");}
+function tpill(pd){const d=pd-TARGET;if(Math.abs(d)/TARGET<=0.01)return `<span class="pill good">on target</span>`;return d>0?`<span class="pill good">+${money(d)}/day</span>`:`<span class="pill bad">${money(-d)}/day short</span>`;}
+function renderKPIs(){
+  const gAOV=grossAOV(SURGE), gDay=gAOV*OPD, eff=gAOV/avgDist;
+  const mAOV=mornAOV(), eAOV=eveAOV(SURGE);
+  const disc=blendedDisc(), nAOV=gAOV*(1-disc), nDay=nAOV*OPD;
+  document.getElementById('ekpis').innerHTML=`
+    <div class="ekpi"><div class="lab">Morning AOV</div><div class="val mono">${money(mAOV)}</div><div class="sub2">avg ${mDist.toFixed(1)} km · no surge</div></div>
+    <div class="ekpi"><div class="lab">Evening AOV</div><div class="val mono">${money(eAOV)}</div><div class="sub2">avg ${eDist.toFixed(1)} km${SURGE>0?' · +'+(SURGE*100).toFixed(0)+'% surge':''}</div></div>
+    <div class="ekpi"><div class="lab">Blended AOV</div><div class="val mono">${money(gAOV)}</div><div class="sub2">${Math.round(mOrdTot/total*100)}% AM · ${Math.round(eOrdTot/total*100)}% PM · eff ${money(eff)}/km</div></div>
+    <div class="ekpi"><div class="lab">Gross ₹/vehicle/day</div><div class="val mono">${money(gDay)}</div><div class="sub2">driver earning · ${tpill(gDay)}</div></div>
+    <div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">${(disc*100).toFixed(1)}%</div><div class="sub2">${(DNEW*100).toFixed(0)}% new · ${(DRET*100).toFixed(0)}% ret · ${(DMORN*100).toFixed(0)}% &lt;1PM · higher wins</div></div>
+    <div class="ekpi"><div class="lab">Net AOV · after promo</div><div class="val mono">${money(nAOV)}</div><div class="sub2">gross ${money(gAOV)} − ${(disc*100).toFixed(1)}%</div></div>
+    <div class="ekpi"><div class="lab">Net ₹/vehicle/day</div><div class="val mono" style="color:var(--accent)">${money(nDay)}</div><div class="sub2">ILine realization · ${tpill(nDay)}</div></div>`;
+}
+function drawChart(){
+  const eve=SESS==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,mult=eve?1+SURGE:1;
+  const W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500;
+  const X=km=>pad.l+(km/kmMax)*(W-pad.l-pad.r),Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Price ladder ${SESS}">`;
+  for(let v=0;v<=yMax;v+=250){s+=`<line class="gridline" x1="${pad.l}" y1="${Y(v)}" x2="${W-pad.r}" y2="${Y(v)}"/><text class="axlab" x="${pad.l-8}" y="${Y(v)+3}" text-anchor="end">₹${v}</text>`;}
+  for(let km=0;km<=kmMax;km+=10){s+=`<text class="axlab" x="${X(km)}" y="${H-pad.b+15}" text-anchor="middle">${km}km</text>`;}
+  const pts=BK.filter(b=>AVGKM[b]<=kmMax).map(b=>({x:AVGKM[b],lo:Math.min(comp[b].P,comp[b].D,comp[b].U),hi:Math.max(comp[b].P,comp[b].D,comp[b].U)}));
+  s+=`<polygon points="${pts.map(p=>X(p.x)+','+Y(Math.min(p.hi,yMax))).join(' ')} ${pts.slice().reverse().map(p=>X(p.x)+','+Y(p.lo)).join(' ')}" fill="var(--delh)" opacity="0.16"/>`;
+  let d=''; for(let km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(iFare(km)*mult,yMax))+' ';}
+  s+=`<path class="mline" d="${d}" stroke="var(--curr)" stroke-width="2.8"/>`;
+  // ILine net-of-discount line — session-aware (morning applies max(segment, morning discount))
+  const disc = eve ? segEveDisc() : segMornDisc();
+  let dn=''; for(let km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(iFare(km)*mult*(1-disc),yMax))+' ';}
+  s+=`<path class="mline" d="${dn}" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>`;
+  for(const b of BK){if(AVGKM[b]>kmMax)continue;const c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(([k,col])=>{s+=`<circle cx="${X(AVGKM[b])}" cy="${Y(Math.min(c[k],yMax))}" r="3" fill="var(--${col})" opacity="0.85"/>`;});}
+  for(const b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;const x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+=`<rect x="${x-3.2}" y="${y-3.2}" width="6.4" height="6.4" transform="rotate(45 ${x} ${y})" fill="var(--ink)"/>`;}
+  document.getElementById('chart').innerHTML=s+'</svg>';
+}
+function renderCompareTable(){
+  const eve=SESS==='evening';
+  const comp=eve?COMP_E:COMP, mult=eve?(1+SURGE):1, disc=eve?segEveDisc():segMornDisc();
+  const so=eve?eOrders:mOrders; let soT=0; for(const b of BK) soT+=so[b];
+  const col=v=> v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';
+  const pct=v=>`${v>0?'+':''}${Math.round(v*100)}%`;
+  const body=document.getElementById('cmpBody'); body.innerHTML='';
+  let cP=0,cD=0,cU=0,cheapW=0,gW=0,nW=0;
+  for(const b of BK){
+    const km=SCRAPE_KM[b];                                   // price ILine at the scrape's avg distance
+    const g=iFare(km)*mult, n=g*(1-disc), c=comp[b], cheap=Math.min(c.P,c.D,c.U);
+    const dC=n/cheap-1, dP=n/c.P-1, w=so[b];
+    cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${b} km</td><td style="color:var(--muted)">${km}</td>
+      <td>${money(c.P)}</td><td>${money(c.D)}</td><td>${money(c.U)}</td>
+      <td style="color:var(--muted)">${money(g)}</td><td style="font-weight:700">${money(n)}</td>
+      <td style="color:${col(dC)};font-weight:600">${pct(dC)}</td>
+      <td style="color:${col(dP)};font-weight:600">${pct(dP)}</td>`;
+    body.appendChild(tr);
+  }
+  cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;
+  const dc=nW/cheapW-1, dp=nW/cP-1;
+  document.getElementById('cmpFoot').innerHTML=`<td>Blended</td><td></td>
+    <td>${money(cP)}</td><td>${money(cD)}</td><td>${money(cU)}</td>
+    <td>${money(gW)}</td><td>${money(nW)}</td>
+    <td style="color:${col(dc)}">${pct(dc)}</td><td style="color:${col(dp)}">${pct(dp)}</td>`;
+}
+function renderAll(){renderKPIs();drawChart();renderCompareTable();}
+document.getElementById('base').addEventListener('input',e=>{BASE=+e.target.value;document.getElementById('baseOut').textContent='₹'+BASE;renderAll();});
+document.getElementById('rpk').addEventListener('input',e=>{RPK=+e.target.value;document.getElementById('rpkOut').textContent='₹'+RPK;renderAll();});
+document.getElementById('opd').addEventListener('input',e=>{OPD=+e.target.value;document.getElementById('opdOut').textContent=OPD;renderAll();});
+document.getElementById('target').addEventListener('input',e=>{TARGET=+e.target.value||0;renderAll();});
+document.getElementById('surge').addEventListener('input',e=>{SURGE=+e.target.value/100;document.getElementById('surgeOut').textContent=(+e.target.value).toFixed(1)+'%';renderAll();});
+document.getElementById('nshare').addEventListener('input',e=>{NEWSHARE=+e.target.value/100;document.getElementById('nsOut').textContent=e.target.value+'%';renderAll();});
+document.getElementById('dnew').addEventListener('input',e=>{DNEW=+e.target.value/100;document.getElementById('dnOut').textContent=e.target.value+'%';renderAll();});
+document.getElementById('dret').addEventListener('input',e=>{DRET=+e.target.value/100;document.getElementById('drOut').textContent=e.target.value+'%';renderAll();});
+document.getElementById('dmorn').addEventListener('input',e=>{DMORN=+e.target.value/100;document.getElementById('dmOut').textContent=e.target.value+'%';renderAll();});
+document.querySelectorAll('.segbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');SESS=b.dataset.sess;renderAll();}));
+renderAll();
+
+/* ===== Target -> Tariff tab (full discount model + surge) ===== */
+var TNR=1500,OPDT=3,T_NS=0.06,T_DN=0.21,T_DR=0.22,T_DM=0,T_SG=0,BASE2=235,RPK2=30,SESS2='evening',LASTFREE='base';
+var AVGD=avgDist,T_MDF=0.365;
+function tSegEve(){return T_NS*T_DN+(1-T_NS)*T_DR;}
+function tSegMorn(){return T_NS*Math.max(T_DN,T_DM)+(1-T_NS)*Math.max(T_DR,T_DM);}
+function tBlended(){return T_MDF*tSegMorn()+(1-T_MDF)*tSegEve();}
+function tA(){return 1+T_SG*eOrdTot/total;}
+function tD(){return (mDistSum+(1+T_SG)*eDistSum)/total;}
+function tFare(km){return BASE2+RPK2*km;}
+function grossAOV_T(){return BASE2*tA()+RPK2*tD();}
+function solveT(){var netAOV=TNR/OPDT,disc=tBlended(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=tA(),D=tD();
+  if(LASTFREE==='base'){RPK2=Math.max((reqGross-BASE2*A)/D,0);}else{BASE2=Math.max((reqGross-RPK2*D)/A,0);}
+  return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
+function tpill2(nDay){var d=nDay-TNR;if(Math.abs(d)/TNR<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
+function renderTargetTable(){
+  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,mult=eve?(1+T_SG):1,disc=eve?tSegEve():tSegMorn(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
+  var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
+  var body=document.getElementById('cmpBody2');body.innerHTML='';
+  var cP=0,cD=0,cU=0,cheapW=0,gW=0,nW=0;
+  for(b of BK){var km=SCRAPE_KM[b],g=tFare(km)*mult,n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
+    cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
+    body.insertAdjacentHTML('beforeend','<tr><td>'+b+' km</td><td style="color:var(--muted)">'+km+'</td><td>'+money(c.P)+'</td><td>'+money(c.D)+'</td><td>'+money(c.U)+'</td><td style="color:var(--muted)">'+money(g)+'</td><td style="font-weight:700">'+money(n)+'</td><td style="color:'+col(dC)+';font-weight:600">'+pct(dC)+'</td><td style="color:'+col(dP)+';font-weight:600">'+pct(dP)+'</td></tr>');}
+  cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;var dc=nW/cheapW-1,dp=nW/cP-1;
+  document.getElementById('cmpFoot2').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td>'+money(cD)+'</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
+}
+function renderTargetChart(){
+  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,mult=eve?(1+T_SG):1,disc=eve?tSegEve():tSegMorn(),b,km,v;
+  var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500,step=250;
+  var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  for(v=0;v<=yMax;v+=step){s+='<line class="gridline" x1="'+pad.l+'" y1="'+Y(v)+'" x2="'+(W-pad.r)+'" y2="'+Y(v)+'"/><text class="axlab" x="'+(pad.l-8)+'" y="'+(Y(v)+3)+'" text-anchor="end">₹'+v+'</text>';}
+  for(km=0;km<=kmMax;km+=10){s+='<text class="axlab" x="'+X(km)+'" y="'+(H-pad.b+15)+'" text-anchor="middle">'+km+'km</text>';}
+  var pts=BK.filter(function(b){return AVGKM[b]<=kmMax;}).map(function(b){return {x:AVGKM[b],lo:Math.min(comp[b].P,comp[b].D,comp[b].U),hi:Math.max(comp[b].P,comp[b].D,comp[b].U)};});
+  s+='<polygon points="'+pts.map(function(p){return X(p.x)+','+Y(Math.min(p.hi,yMax));}).join(' ')+' '+pts.slice().reverse().map(function(p){return X(p.x)+','+Y(p.lo);}).join(' ')+'" fill="var(--delh)" opacity="0.16"/>';
+  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(tFare(km)*mult,yMax))+' ';}
+  s+='<path class="mline" d="'+d+'" stroke="var(--curr)" stroke-width="2.8"/>';
+  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(tFare(km)*mult*(1-disc),yMax))+' ';}
+  s+='<path class="mline" d="'+dn+'" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>';
+  for(b of BK){if(AVGKM[b]>kmMax)continue;var c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(function(pair){s+='<circle cx="'+X(AVGKM[b])+'" cy="'+Y(Math.min(c[pair[0]],yMax))+'" r="3" fill="var(--'+pair[1]+')" opacity="0.85"/>';});}
+  for(b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;var x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+='<rect x="'+(x-3.2)+'" y="'+(y-3.2)+'" width="6.4" height="6.4" transform="rotate(45 '+x+' '+y+')" fill="var(--ink)"/>';}
+  document.getElementById('chart2').innerHTML=s+'</svg>';
+}
+function renderTarget(){
+  var r=solveT(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
+  if(LASTFREE==='base'){document.getElementById('rpk2').value=Math.round(RPK2);document.getElementById('rpk2Out').textContent='₹'+RPK2.toFixed(1);}
+  else{document.getElementById('base2').value=Math.round(BASE2/5)*5;document.getElementById('base2Out').textContent='₹'+Math.round(BASE2);}
+  var gAOV=grossAOV_T(),nDay=gAOV*(1-disc)*OPDT;
+  document.getElementById('ekpis2').innerHTML=
+   '<div class="ekpi"><div class="lab">Target net AOV</div><div class="val mono">'+money(netAOV)+'</div><div class="sub2">'+money(TNR)+'/day / OPD '+OPDT+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(T_DN*100).toFixed(0)+'% acq &middot; '+(T_DR*100).toFixed(0)+'% ret &middot; '+(T_DM*100).toFixed(0)+'% &lt;1PM</div></div>'
+  +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
+  +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
+  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASE2)+' + &#8377;'+RPK2.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(T_SG>0?' &middot; +'+(T_SG*100).toFixed(0)+'% eve':'')+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+tpill2(nDay)+'</div></div>';
+  renderTargetTable();renderTargetChart();
+}
+document.getElementById('tnr').addEventListener('input',function(e){TNR=+e.target.value||0;renderTarget();});
+document.getElementById('opdt').addEventListener('input',function(e){OPDT=+e.target.value;document.getElementById('opdtOut').textContent=OPDT;renderTarget();});
+document.getElementById('nshare2').addEventListener('input',function(e){T_NS=+e.target.value/100;document.getElementById('ns2Out').textContent=e.target.value+'%';renderTarget();});
+document.getElementById('dnew2').addEventListener('input',function(e){T_DN=+e.target.value/100;document.getElementById('dn2Out').textContent=e.target.value+'%';renderTarget();});
+document.getElementById('dret2').addEventListener('input',function(e){T_DR=+e.target.value/100;document.getElementById('dr2Out').textContent=e.target.value+'%';renderTarget();});
+document.getElementById('dmorn2').addEventListener('input',function(e){T_DM=+e.target.value/100;document.getElementById('dm2Out').textContent=e.target.value+'%';renderTarget();});
+document.getElementById('surge2').addEventListener('input',function(e){T_SG=+e.target.value/100;document.getElementById('sg2Out').textContent=(+e.target.value).toFixed(1)+'%';renderTarget();});
+document.getElementById('base2').addEventListener('input',function(e){BASE2=+e.target.value;LASTFREE='base';document.getElementById('base2Out').textContent='₹'+BASE2;renderTarget();});
+document.getElementById('rpk2').addEventListener('input',function(e){RPK2=+e.target.value;LASTFREE='rpk';document.getElementById('rpk2Out').textContent='₹'+RPK2;renderTarget();});
+document.querySelectorAll('.segbtn[data-tsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-tsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESS2=b.dataset.tsess;renderTarget();});});
+renderTarget();
+
+document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");const t=b.dataset.tab;
+  document.getElementById("tab-data").hidden=t!=="data";
+  document.getElementById("tab-sim").hidden=t!=="sim";
+  document.getElementById("tab-target").hidden=t!=="target";
+  if(t==="sim")renderAll();
+  if(t==="target")renderTarget();
+}));
+</script>
