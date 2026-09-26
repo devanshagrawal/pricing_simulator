@@ -341,7 +341,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label>Acquisition discount &middot; new <b id="dn2Out">21%</b></label><input type="range" id="dnew2" min="0" max="50" step="1" value="21"></div>
           <div class="ctl"><label>Retention discount <b id="dr2Out">22%</b></label><input type="range" id="dret2" min="0" max="50" step="1" value="22"></div>
           <div class="ctl"><label>Morning discount &middot; before 1 PM <b id="dm2Out">0%</b></label><input type="range" id="dmorn2" min="0" max="50" step="1" value="0"></div>
-          <div class="ctl"><label>Evening surge &middot; after 3 PM <b id="sg2Out">0%</b></label><input type="range" id="surge2" min="0" max="25" step="0.5" value="0"></div>
+          <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgt2="pct">%</button><button class="segbtn" data-sgt2="flat">Flat ₹</button></div></div>
+          <div class="ctl" id="sg2PctCtl"><label>Surge % <b id="sg2Out">0%</b></label><input type="range" id="surge2" min="0" max="25" step="0.5" value="0"></div>
+          <div class="ctl" id="sg2FlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sg2FlatOut">₹0</b></label><input type="range" id="surge2Flat" min="0" max="200" step="5" value="0"></div>
           <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move either — the other solves to keep AOV on target ↓</div>
           <div class="ctl"><label>Base fare ₹ <b id="base2Out">235</b></label><input type="range" id="base2" min="0" max="700" step="5" value="235"></div>
           <div class="ctl"><label>Rate ₹ / km <b id="rpk2Out">30</b></label><input type="range" id="rpk2" min="0" max="80" step="1" value="30"></div>
@@ -388,7 +390,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label>Acquisition discount · new <b id="dnOutS">21%</b></label><input type="range" id="dnewS" min="0" max="50" step="1" value="21"></div>
           <div class="ctl"><label>Retention discount <b id="drOutS">22%</b></label><input type="range" id="dretS" min="0" max="50" step="1" value="22"></div>
           <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutS">0%</b></label><input type="range" id="dmornS" min="0" max="50" step="1" value="0"></div>
-          <div class="ctl"><label>Evening surge · after 3 PM <b id="sgOutS">0%</b></label><input type="range" id="surgeS" min="0" max="25" step="0.5" value="0"></div>
+          <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgtsep="pct">%</button><button class="segbtn" data-sgtsep="flat">Flat ₹</button></div></div>
+          <div class="ctl" id="sgSPctCtl"><label>Surge % <b id="sgOutS">0%</b></label><input type="range" id="surgeS" min="0" max="25" step="0.5" value="0"></div>
+          <div class="ctl" id="sgSFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sgSFlatOut">₹0</b></label><input type="range" id="surgeSFlat" min="0" max="200" step="5" value="0"></div>
           <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move either — the other solves to keep AOV on target ↓</div>
           <div class="ctl"><label>Base fare ₹ <b id="baseOutS">235</b></label><input type="range" id="baseS" min="0" max="700" step="5" value="235"></div>
           <div class="ctl"><label>Rate ₹ / km <b id="rateOutS">30</b></label><input type="range" id="rateS" min="0" max="80" step="1" value="30"></div>
@@ -534,28 +538,31 @@ var AVGD=avgDist,T_MDF=0.365;
 function tSegEve(){return T_NS*T_DN+(1-T_NS)*T_DR;}
 function tSegMorn(){return T_NS*Math.max(T_DN,T_DM)+(1-T_NS)*Math.max(T_DR,T_DM);}
 function tBlended(){return T_MDF*tSegMorn()+(1-T_MDF)*tSegEve();}
-function tA(){return 1+T_SG*eOrdTot/total;}
-function tD(){return (mDistSum+(1+T_SG)*eDistSum)/total;}
+var T_SGTYPE='pct',T_SGFLAT=0;
+function tEv(f){return T_SGTYPE==='flat'?f+T_SGFLAT:f*(1+T_SG);}
+function tA(){return T_SGTYPE==='flat'?1:1+T_SG*eOrdTot/total;}
+function tD(){return T_SGTYPE==='flat'?(mDistSum+eDistSum)/total:(mDistSum+(1+T_SG)*eDistSum)/total;}
+function tFLAT(){return T_SGTYPE==='flat'?T_SGFLAT*eOrdTot/total:0;}
 function tFare(km){return BASE2+RPK2*km;}
-function grossAOV_T(){return BASE2*tA()+RPK2*tD();}
-function solveT(){var netAOV=TNR/OPDT,disc=tBlended(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=tA(),D=tD();
-  if(LASTFREE==='base'){RPK2=Math.max((reqGross-BASE2*A)/D,0);}else{BASE2=Math.max((reqGross-RPK2*D)/A,0);}
+function grossAOV_T(){return BASE2*tA()+RPK2*tD()+tFLAT();}
+function solveT(){var netAOV=TNR/OPDT,disc=tBlended(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=tA(),D=tD(),F=tFLAT();
+  if(LASTFREE==='base'){RPK2=Math.max((reqGross-F-BASE2*A)/D,0);}else{BASE2=Math.max((reqGross-F-RPK2*D)/A,0);}
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function tpill2(nDay){var d=nDay-TNR;if(Math.abs(d)/TNR<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function renderTargetTable(){
-  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,mult=eve?(1+T_SG):1,disc=eve?tSegEve():tSegMorn(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,ev=function(f){return eve?tEv(f):f;},disc=eve?tSegEve():tSegMorn(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
   var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
   var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
   var body=document.getElementById('cmpBody2');body.innerHTML='';
   var cP=0,cD=0,cU=0,cheapW=0,gW=0,nW=0;
-  for(b of BK){var km=SCRAPE_KM[b],g=tFare(km)*mult,n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
+  for(b of BK){var km=SCRAPE_KM[b],g=ev(tFare(km)),n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
     cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
     body.insertAdjacentHTML('beforeend','<tr><td>'+b+' km</td><td style="color:var(--muted)">'+km+'</td><td>'+money(c.P)+'</td><td>'+money(c.D)+'</td><td>'+money(c.U)+'</td><td style="color:var(--muted)">'+money(g)+'</td><td style="font-weight:700">'+money(n)+'</td><td style="color:'+col(dC)+';font-weight:600">'+pct(dC)+'</td><td style="color:'+col(dP)+';font-weight:600">'+pct(dP)+'</td></tr>');}
   cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;var dc=nW/cheapW-1,dp=nW/cP-1;window.TGT_COMP={gross:gW,net:nW,vsCheap:dc,vsPorter:dp};
   document.getElementById('cmpFoot2').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td>'+money(cD)+'</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
 }
 function renderTargetChart(){
-  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,mult=eve?(1+T_SG):1,disc=eve?tSegEve():tSegMorn(),b,km,v;
+  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?tEv(f):f;},disc=eve?tSegEve():tSegMorn(),b,km,v;
   var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500,step=250;
   var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
   var s='<svg viewBox="0 0 '+W+' '+H+'">';
@@ -563,9 +570,9 @@ function renderTargetChart(){
   for(km=0;km<=kmMax;km+=10){s+='<text class="axlab" x="'+X(km)+'" y="'+(H-pad.b+15)+'" text-anchor="middle">'+km+'km</text>';}
   var pts=BK.filter(function(b){return AVGKM[b]<=kmMax;}).map(function(b){return {x:AVGKM[b],lo:Math.min(comp[b].P,comp[b].D,comp[b].U),hi:Math.max(comp[b].P,comp[b].D,comp[b].U)};});
   s+='<polygon points="'+pts.map(function(p){return X(p.x)+','+Y(Math.min(p.hi,yMax));}).join(' ')+' '+pts.slice().reverse().map(function(p){return X(p.x)+','+Y(p.lo);}).join(' ')+'" fill="var(--delh)" opacity="0.16"/>';
-  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(tFare(km)*mult,yMax))+' ';}
+  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(tFare(km)),yMax))+' ';}
   s+='<path class="mline" d="'+d+'" stroke="var(--curr)" stroke-width="2.8"/>';
-  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(tFare(km)*mult*(1-disc),yMax))+' ';}
+  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(tFare(km))*(1-disc),yMax))+' ';}
   s+='<path class="mline" d="'+dn+'" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>';
   for(b of BK){if(AVGKM[b]>kmMax)continue;var c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(function(pair){s+='<circle cx="'+X(AVGKM[b])+'" cy="'+Y(Math.min(c[pair[0]],yMax))+'" r="3" fill="var(--'+pair[1]+')" opacity="0.85"/>';});}
   for(b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;var x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+='<rect x="'+(x-3.2)+'" y="'+(y-3.2)+'" width="6.4" height="6.4" transform="rotate(45 '+x+' '+y+')" fill="var(--ink)"/>';}
@@ -581,7 +588,7 @@ function renderTarget(){
   +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(T_DN*100).toFixed(0)+'% acq &middot; '+(T_DR*100).toFixed(0)+'% ret &middot; '+(T_DM*100).toFixed(0)+'% &lt;1PM</div></div>'
   +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
   +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
-  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASE2)+' + &#8377;'+RPK2.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(T_SG>0?' &middot; +'+(T_SG*100).toFixed(0)+'% eve':'')+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASE2)+' + &#8377;'+RPK2.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(T_SGTYPE==='flat'?(T_SGFLAT>0?' &middot; +₹'+T_SGFLAT+' eve':''):(T_SG>0?' &middot; +'+(T_SG*100).toFixed(0)+'% eve':''))+'</div></div>'
   +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+tpill2(nDay)+'</div></div>';
   renderTargetTable();renderTargetChart();
 }
@@ -592,6 +599,8 @@ document.getElementById('dnew2').addEventListener('input',function(e){T_DN=+e.ta
 document.getElementById('dret2').addEventListener('input',function(e){T_DR=+e.target.value/100;document.getElementById('dr2Out').textContent=e.target.value+'%';renderTarget();});
 document.getElementById('dmorn2').addEventListener('input',function(e){T_DM=+e.target.value/100;document.getElementById('dm2Out').textContent=e.target.value+'%';renderTarget();});
 document.getElementById('surge2').addEventListener('input',function(e){T_SG=+e.target.value/100;document.getElementById('sg2Out').textContent=(+e.target.value).toFixed(1)+'%';renderTarget();});
+document.getElementById('surge2Flat').addEventListener('input',function(e){T_SGFLAT=+e.target.value;document.getElementById('sg2FlatOut').textContent='₹'+T_SGFLAT;renderTarget();});
+document.querySelectorAll('.segbtn[data-sgt2]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-sgt2]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');T_SGTYPE=b.dataset.sgt2;document.getElementById('sg2PctCtl').hidden=T_SGTYPE!=='pct';document.getElementById('sg2FlatCtl').hidden=T_SGTYPE!=='flat';renderTarget();});});
 document.getElementById('base2').addEventListener('input',function(e){BASE2=+e.target.value;LASTFREE='base';document.getElementById('base2Out').textContent='₹'+BASE2;renderTarget();});
 document.getElementById('rpk2').addEventListener('input',function(e){RPK2=+e.target.value;LASTFREE='rpk';document.getElementById('rpk2Out').textContent='₹'+RPK2;renderTarget();});
 document.querySelectorAll('.segbtn[data-tsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-tsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESS2=b.dataset.tsess;renderTarget();});});
@@ -609,8 +618,8 @@ function saveConfig(mode,btn){
     row={saved_at:nowStamp(),mode:mode,session:SESS,base_fare:Math.round(BASE),rate_per_km:RPK,opd:OPD,target_gross_per_day:TARGET,target_net_per_day:'',evening_surge_pct:(SURGE*100).toFixed(1),evening_surge_type:SURGE_TYPE,evening_flat_surge:(SURGE_TYPE==='flat'?SURGE_FLAT:''),new_share_pct:Math.round(NEWSHARE*100),acquisition_disc_pct:Math.round(DNEW*100),retention_disc_pct:Math.round(DRET*100),morning_disc_pct:Math.round(DMORN*100),morning_aov:Math.round(k.mAOV||0),evening_aov:Math.round(k.eAOV||0),blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round(k.gDay||0),net_aov:Math.round(k.nAOV||0),net_per_day:Math.round(k.nDay||0),target_net_aov:'',required_gross_aov:'',effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }else{var sp=mode==='Target Sep';
     var k=sp?(window.TGT_KPI_S||{}):(window.TGT_KPI||{}),cm=sp?(window.TGT_COMP_S||{}):(window.TGT_COMP||{});
-    var bs=sp?BASES:BASE2,rt=sp?RATES:RPK2,op=sp?OPDTS:OPDT,tn=sp?TNRS:TNR,sg=sp?SGS:T_SG,ns=sp?NSS:T_NS,dn=sp?DNS:T_DN,dr=sp?DRS:T_DR,dm=sp?DMS:T_DM,se=sp?SESSS:SESS2;
-    row={saved_at:nowStamp(),mode:mode,session:se,base_fare:Math.round(bs),rate_per_km:+rt.toFixed(1),opd:op,target_gross_per_day:'',target_net_per_day:tn,evening_surge_pct:(sg*100).toFixed(1),evening_surge_type:'pct',evening_flat_surge:'',new_share_pct:Math.round(ns*100),acquisition_disc_pct:Math.round(dn*100),retention_disc_pct:Math.round(dr*100),morning_disc_pct:Math.round(dm*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*op),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+    var bs=sp?BASES:BASE2,rt=sp?RATES:RPK2,op=sp?OPDTS:OPDT,tn=sp?TNRS:TNR,sg=sp?SGS:T_SG,ns=sp?NSS:T_NS,dn=sp?DNS:T_DN,dr=sp?DRS:T_DR,dm=sp?DMS:T_DM,se=sp?SESSS:SESS2,st=sp?SGSTYPE:T_SGTYPE,sf=sp?SGSFLAT:T_SGFLAT;
+    row={saved_at:nowStamp(),mode:mode,session:se,base_fare:Math.round(bs),rate_per_km:+rt.toFixed(1),opd:op,target_gross_per_day:'',target_net_per_day:tn,evening_surge_pct:(sg*100).toFixed(1),evening_surge_type:st,evening_flat_surge:(st==='flat'?sf:''),new_share_pct:Math.round(ns*100),acquisition_disc_pct:Math.round(dn*100),retention_disc_pct:Math.round(dr*100),morning_disc_pct:Math.round(dm*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*op),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }
   configLog.push(row);try{localStorage.setItem(LOGKEY,JSON.stringify(configLog));}catch(e){}updateSaveCount();
   if(btn){var t=btn.textContent;btn.textContent='Saved ✓';setTimeout(function(){btn.textContent=t;},900);}
@@ -635,28 +644,31 @@ var TNRS=1500,OPDTS=3,NSS=0.06,DNS=0.21,DRS=0.22,DMS=0,SGS=0,BASES=235,RATES=30,
 function segEveS(){return NSS*DNS+(1-NSS)*DRS;}
 function segMornS(){return NSS*Math.max(DNS,DMS)+(1-NSS)*Math.max(DRS,DMS);}
 function blendedS(){return T_MDF*segMornS()+(1-T_MDF)*segEveS();}
-function aMultS(){return 1+SGS*eOrdTot/total;}
-function dDistS(){return (mDistSum+(1+SGS)*eDistSum)/total;}
+var SGSTYPE='pct',SGSFLAT=0;
+function sEv(f){return SGSTYPE==='flat'?f+SGSFLAT:f*(1+SGS);}
+function aMultS(){return SGSTYPE==='flat'?1:1+SGS*eOrdTot/total;}
+function dDistS(){return SGSTYPE==='flat'?(mDistSum+eDistSum)/total:(mDistSum+(1+SGS)*eDistSum)/total;}
+function sFLAT(){return SGSTYPE==='flat'?SGSFLAT*eOrdTot/total:0;}
 function fareS(km){return BASES+RATES*km;}
-function grossS(){return BASES*aMultS()+RATES*dDistS();}
-function solveTS(){var netAOV=TNRS/OPDTS,disc=blendedS(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=aMultS(),D=dDistS();
-  if(LASTFREES==='base'){RATES=Math.max((reqGross-BASES*A)/D,0);}else{BASES=Math.max((reqGross-RATES*D)/A,0);}
+function grossS(){return BASES*aMultS()+RATES*dDistS()+sFLAT();}
+function solveTS(){var netAOV=TNRS/OPDTS,disc=blendedS(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=aMultS(),D=dDistS(),F=sFLAT();
+  if(LASTFREES==='base'){RATES=Math.max((reqGross-F-BASES*A)/D,0);}else{BASES=Math.max((reqGross-F-RATES*D)/A,0);}
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function pillS(nDay){var d=nDay-TNRS;if(Math.abs(d)/TNRS<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function rTableS(){
-  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,mult=eve?(1+SGS):1,disc=eve?segEveS():segMornS(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,ev=function(f){return eve?sEv(f):f;},disc=eve?segEveS():segMornS(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
   var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
   var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
   var body=document.getElementById('cmpBodyS');body.innerHTML='';
   var cP=0,cD=0,cU=0,cheapW=0,gW=0,nW=0;
-  for(b of BK){var km=SCRAPE_KM[b],g=fareS(km)*mult,n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
+  for(b of BK){var km=SCRAPE_KM[b],g=ev(fareS(km)),n=g*(1-disc),c=comp[b],cheap=Math.min(c.P,c.D,c.U),dC=n/cheap-1,dP=n/c.P-1,w=so[b];
     cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
     body.insertAdjacentHTML('beforeend','<tr><td>'+b+' km</td><td style="color:var(--muted)">'+km+'</td><td>'+money(c.P)+'</td><td style="color:var(--faint)">'+money(c.D)+'*</td><td>'+money(c.U)+'</td><td style="color:var(--muted)">'+money(g)+'</td><td style="font-weight:700">'+money(n)+'</td><td style="color:'+col(dC)+';font-weight:600">'+pct(dC)+'</td><td style="color:'+col(dP)+';font-weight:600">'+pct(dP)+'</td></tr>');}
   cP/=soT;cD/=soT;cU/=soT;cheapW/=soT;gW/=soT;nW/=soT;var dc=nW/cheapW-1,dp=nW/cP-1;window.TGT_COMP_S={gross:gW,net:nW,vsCheap:dc,vsPorter:dp};
   document.getElementById('cmpFootS').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td style="color:var(--faint)">'+money(cD)+'*</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
 }
 function rChartS(){
-  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,raov=eve?RAOV_E:RAOV,mult=eve?(1+SGS):1,disc=eve?segEveS():segMornS(),b,km,v;
+  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?sEv(f):f;},disc=eve?segEveS():segMornS(),b,km,v;
   var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500,step=250;
   var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
   var s='<svg viewBox="0 0 '+W+' '+H+'">';
@@ -664,9 +676,9 @@ function rChartS(){
   for(km=0;km<=kmMax;km+=10){s+='<text class="axlab" x="'+X(km)+'" y="'+(H-pad.b+15)+'" text-anchor="middle">'+km+'km</text>';}
   var pts=BK.filter(function(b){return AVGKM[b]<=kmMax;}).map(function(b){return {x:AVGKM[b],lo:Math.min(comp[b].P,comp[b].D,comp[b].U),hi:Math.max(comp[b].P,comp[b].D,comp[b].U)};});
   s+='<polygon points="'+pts.map(function(p){return X(p.x)+','+Y(Math.min(p.hi,yMax));}).join(' ')+' '+pts.slice().reverse().map(function(p){return X(p.x)+','+Y(p.lo);}).join(' ')+'" fill="var(--delh)" opacity="0.16"/>';
-  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(fareS(km)*mult,yMax))+' ';}
+  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(fareS(km)),yMax))+' ';}
   s+='<path class="mline" d="'+d+'" stroke="var(--curr)" stroke-width="2.8"/>';
-  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(fareS(km)*mult*(1-disc),yMax))+' ';}
+  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(fareS(km))*(1-disc),yMax))+' ';}
   s+='<path class="mline" d="'+dn+'" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>';
   for(b of BK){if(AVGKM[b]>kmMax)continue;var c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(function(pair){s+='<circle cx="'+X(AVGKM[b])+'" cy="'+Y(Math.min(c[pair[0]],yMax))+'" r="3" fill="var(--'+pair[1]+')" opacity="0.85"/>';});}
   for(b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;var x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+='<rect x="'+(x-3.2)+'" y="'+(y-3.2)+'" width="6.4" height="6.4" transform="rotate(45 '+x+' '+y+')" fill="var(--ink)"/>';}
@@ -682,7 +694,7 @@ function rTargetS(){
   +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(DNS*100).toFixed(0)+'% acq &middot; '+(DRS*100).toFixed(0)+'% ret &middot; '+(DMS*100).toFixed(0)+'% &lt;1PM</div></div>'
   +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
   +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
-  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASES)+' + &#8377;'+RATES.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(SGS>0?' &middot; +'+(SGS*100).toFixed(0)+'% eve':'')+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASES)+' + &#8377;'+RATES.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(SGSTYPE==='flat'?(SGSFLAT>0?' &middot; +₹'+SGSFLAT+' eve':''):(SGS>0?' &middot; +'+(SGS*100).toFixed(0)+'% eve':''))+'</div></div>'
   +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+pillS(nDay)+'</div></div>';
   rTableS();rChartS();
 }
@@ -693,6 +705,8 @@ document.getElementById('dnewS').addEventListener('input',function(e){DNS=+e.tar
 document.getElementById('dretS').addEventListener('input',function(e){DRS=+e.target.value/100;document.getElementById('drOutS').textContent=e.target.value+'%';rTargetS();});
 document.getElementById('dmornS').addEventListener('input',function(e){DMS=+e.target.value/100;document.getElementById('dmOutS').textContent=e.target.value+'%';rTargetS();});
 document.getElementById('surgeS').addEventListener('input',function(e){SGS=+e.target.value/100;document.getElementById('sgOutS').textContent=(+e.target.value).toFixed(1)+'%';rTargetS();});
+document.getElementById('surgeSFlat').addEventListener('input',function(e){SGSFLAT=+e.target.value;document.getElementById('sgSFlatOut').textContent='₹'+SGSFLAT;rTargetS();});
+document.querySelectorAll('.segbtn[data-sgtsep]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-sgtsep]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SGSTYPE=b.dataset.sgtsep;document.getElementById('sgSPctCtl').hidden=SGSTYPE!=='pct';document.getElementById('sgSFlatCtl').hidden=SGSTYPE!=='flat';rTargetS();});});
 document.getElementById('baseS').addEventListener('input',function(e){BASES=+e.target.value;LASTFREES='base';document.getElementById('baseOutS').textContent='₹'+BASES;rTargetS();});
 document.getElementById('rateS').addEventListener('input',function(e){RATES=+e.target.value;LASTFREES='rate';document.getElementById('rateOutS').textContent='₹'+RATES;rTargetS();});
 document.querySelectorAll('.segbtn[data-ssess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-ssess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESSS=b.dataset.ssess;rTargetS();});});
