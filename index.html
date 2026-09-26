@@ -312,7 +312,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
     </div>
         <div class="chartcard">
       <div class="chart-ctrl">
-        <div class="seg" role="tablist"><button class="segbtn" data-sess="morning">Morning</button><button class="segbtn active" data-sess="evening">Evening</button></div>
+        <div class="seg" role="tablist"><button class="segbtn" data-sess="morning">Morning ≤1PM</button><button class="segbtn" data-sess="mid">1–3 PM</button><button class="segbtn active" data-sess="evening">Evening &gt;3PM</button></div>
         <div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div>
       </div>
       <div class="legend">
@@ -365,7 +365,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <tfoot><tr class="foot" id="cmpFoot2"></tr></tfoot>
         </table></div>
         <div class="chartcard">
-          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-tsess="morning">Morning</button><button class="segbtn active" data-tsess="evening">Evening</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div></div>
+          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-tsess="morning">Morning ≤1PM</button><button class="segbtn" data-tsess="mid">1–3 PM</button><button class="segbtn active" data-tsess="evening">Evening &gt;3PM</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div></div>
           <div class="legend">
         <span><i class="band" style="background:var(--delh)"></i>Competitor range</span>
         <span><i style="background:var(--porter)"></i>Porter <i style="background:var(--delh)"></i>Delh <i style="background:var(--ud)"></i>UD</span>
@@ -409,7 +409,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <tfoot><tr class="foot" id="cmpFootS"></tr></tfoot>
         </table></div>
         <div class="chartcard">
-          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-ssess="morning">Morning</button><button class="segbtn active" data-ssess="evening">Evening</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div></div>
+          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-ssess="morning">Morning ≤1PM</button><button class="segbtn" data-ssess="mid">1–3 PM</button><button class="segbtn active" data-ssess="evening">Evening &gt;3PM</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · shaded = competitor min–max</div></div>
           <div class="legend">
           <span><i class="band" style="background:var(--delh)"></i>Competitor range</span>
           <span><i style="background:var(--porter)"></i>Porter <i style="background:var(--delh)"></i>Delh <i style="background:var(--ud)"></i>UD</span>
@@ -471,7 +471,7 @@ function renderKPIs(){
     <div class="ekpi"><div class="lab">Net ₹/vehicle/day</div><div class="val mono" style="color:var(--accent)">${money(nDay)}</div><div class="sub2">ILine realization · ${tpill(nDay)}</div></div>`;
 }
 function drawChart(){
-  const eve=SESS==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=f=>eve?evAdj(f):f;
+  const eve=SESS==='evening',morn=SESS==='morning',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=f=>eve?evAdj(f):f;
   const W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500;
   const X=km=>pad.l+(km/kmMax)*(W-pad.l-pad.r),Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Price ladder ${SESS}">`;
@@ -482,7 +482,7 @@ function drawChart(){
   let d=''; for(let km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(iFare(km)),yMax))+' ';}
   s+=`<path class="mline" d="${d}" stroke="var(--curr)" stroke-width="2.8"/>`;
   // ILine net-of-discount line — session-aware (morning applies max(segment, morning discount))
-  const disc = eve ? segEveDisc() : segMornDisc();
+  const disc = morn ? segMornDisc() : segEveDisc();
   let dn=''; for(let km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(iFare(km))*(1-disc),yMax))+' ';}
   s+=`<path class="mline" d="${dn}" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>`;
   for(const b of BK){if(AVGKM[b]>kmMax)continue;const c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(([k,col])=>{s+=`<circle cx="${X(AVGKM[b])}" cy="${Y(Math.min(c[k],yMax))}" r="3" fill="var(--${col})" opacity="0.85"/>`;});}
@@ -490,8 +490,8 @@ function drawChart(){
   document.getElementById('chart').innerHTML=s+'</svg>';
 }
 function renderCompareTable(){
-  const eve=SESS==='evening';
-  const comp=eve?COMP_E:COMP, ev=f=>eve?evAdj(f):f, disc=eve?segEveDisc():segMornDisc();
+  const eve=SESS==='evening', morn=SESS==='morning';
+  const comp=eve?COMP_E:COMP, ev=f=>eve?evAdj(f):f, disc=morn?segMornDisc():segEveDisc();
   const so=eve?eOrders:mOrders; let soT=0; for(const b of BK) soT+=so[b];
   const col=v=> v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';
   const pct=v=>`${v>0?'+':''}${Math.round(v*100)}%`;
@@ -550,7 +550,7 @@ function solveT(){var netAOV=TNR/OPDT,disc=tBlended(),reqGross=disc>=1?netAOV:ne
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function tpill2(nDay){var d=nDay-TNR;if(Math.abs(d)/TNR<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function renderTargetTable(){
-  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,ev=function(f){return eve?tEv(f):f;},disc=eve?tSegEve():tSegMorn(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var eve=SESS2==='evening',morn=SESS2==='morning',comp=eve?COMP_E:COMP,ev=function(f){return eve?tEv(f):f;},disc=morn?tSegMorn():tSegEve(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
   var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
   var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
   var body=document.getElementById('cmpBody2');body.innerHTML='';
@@ -562,7 +562,7 @@ function renderTargetTable(){
   document.getElementById('cmpFoot2').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td>'+money(cD)+'</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
 }
 function renderTargetChart(){
-  var eve=SESS2==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?tEv(f):f;},disc=eve?tSegEve():tSegMorn(),b,km,v;
+  var eve=SESS2==='evening',morn=SESS2==='morning',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?tEv(f):f;},disc=morn?tSegMorn():tSegEve(),b,km,v;
   var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500,step=250;
   var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
   var s='<svg viewBox="0 0 '+W+' '+H+'">';
@@ -656,7 +656,7 @@ function solveTS(){var netAOV=TNRS/OPDTS,disc=blendedS(),reqGross=disc>=1?netAOV
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function pillS(nDay){var d=nDay-TNRS;if(Math.abs(d)/TNRS<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function rTableS(){
-  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,ev=function(f){return eve?sEv(f):f;},disc=eve?segEveS():segMornS(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var eve=SESSS==='evening',morn=SESSS==='morning',comp=eve?COMP_E_SEP:COMP_SEP,ev=function(f){return eve?sEv(f):f;},disc=morn?segMornS():segEveS(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
   var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
   var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
   var body=document.getElementById('cmpBodyS');body.innerHTML='';
@@ -668,7 +668,7 @@ function rTableS(){
   document.getElementById('cmpFootS').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td style="color:var(--faint)">'+money(cD)+'*</td><td>'+money(cU)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dc)+'">'+pct(dc)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
 }
 function rChartS(){
-  var eve=SESSS==='evening',comp=eve?COMP_E_SEP:COMP_SEP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?sEv(f):f;},disc=eve?segEveS():segMornS(),b,km,v;
+  var eve=SESSS==='evening',morn=SESSS==='morning',comp=eve?COMP_E_SEP:COMP_SEP,raov=eve?RAOV_E:RAOV,ev=function(f){return eve?sEv(f):f;},disc=morn?segMornS():segEveS(),b,km,v;
   var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500,step=250;
   var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
   var s='<svg viewBox="0 0 '+W+' '+H+'">';
