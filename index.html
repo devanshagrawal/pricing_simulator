@@ -396,7 +396,7 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
         <div class="savebar"><button class="sbtn" onclick="saveConfig('Target Sep',this)">Save config</button><button class="sbtn" onclick="exportCSV()">Export CSV <span class="saveCount">(0)</span></button><button class="sbtn ghost" onclick="clearLog()">Clear log</button></div>
         <div class="ekpis" id="ekpisS"></div>
         <h3>ILine net price vs competitors · 25 Sep</h3>
-        <p style="font-size:13px;color:var(--faint);margin-top:-2px">25 Sep scrape — Porter &amp; Uncle&nbsp;D. refreshed. <b>Delhivery* = 31 Aug placeholder</b> (not re-scraped 25 Sep). Priced at scrape avg km; net = gross × (1 − discount). Green = ILine cheaper.</p>
+        <p style="font-size:13px;color:var(--faint);margin-top:-2px">25 Sep scrape — Porter &amp; Uncle&nbsp;D. refreshed. <b>Porter adjusted</b> for drop-city discounts (Delhi −₹100 / Gurgaon −₹300 / Faridabad −₹200; 34 of 102 routes). <b>Delhivery* = 31 Aug placeholder</b>. Priced at scrape avg km; net = gross × (1 − discount). Green = ILine cheaper.</p>
         <div class="tablewrap"><table>
           <thead><tr><th>KM bucket</th><th>km</th><th style="color:var(--porter)">Porter</th><th style="color:var(--delh)">Delhivery*</th><th style="color:var(--ud)">Uncle&nbsp;D.</th><th>ILine gross</th><th>ILine net</th><th>vs cheapest</th><th>vs Porter</th></tr></thead>
           <tbody id="cmpBodyS"></tbody>
@@ -623,8 +623,8 @@ function clearLog(){if(configLog.length&&!confirm('Clear all '+configLog.length+
 updateSaveCount();
 
 /* ===== Target Sep tab (25 Sep competitor data; Delhivery = 31 Aug placeholder) ===== */
-var COMP_SEP={ "0-5":{P:250,D:340,U:398},"5-10":{P:334,D:413,U:484},"10-15":{P:382,D:459,U:501},"15-20":{P:598,D:648,U:551},"20-25":{P:696,D:764,U:559},"25-40":{P:925,D:1011,U:767},"40+":{P:1435,D:1446,U:1130} };
-var COMP_E_SEP={ "0-5":{P:351,D:490,U:448},"5-10":{P:450,D:588,U:497},"10-15":{P:482,D:674,U:442},"15-20":{P:723,D:821,U:543},"20-25":{P:782,D:961,U:588},"25-40":{P:975,D:1087,U:747},"40+":{P:1443,D:1591,U:1146} };
+var COMP_SEP={ "0-5":{P:250,D:340,U:398},"5-10":{P:334,D:413,U:484},"10-15":{P:372,D:459,U:501},"15-20":{P:532,D:648,U:551},"20-25":{P:662,D:764,U:559},"25-40":{P:825,D:1011,U:767},"40+":{P:1206,D:1446,U:1130} };
+var COMP_E_SEP={ "0-5":{P:351,D:490,U:448},"5-10":{P:450,D:588,U:497},"10-15":{P:472,D:674,U:442},"15-20":{P:657,D:821,U:543},"20-25":{P:749,D:961,U:588},"25-40":{P:875,D:1087,U:747},"40+":{P:1214,D:1591,U:1146} };
 var TNRS=1500,OPDTS=3,NSS=0.06,DNS=0.21,DRS=0.22,DMS=0,SGS=0,BASES=235,RATES=30,SESSS='evening',LASTFREES='base';
 function segEveS(){return NSS*DNS+(1-NSS)*DRS;}
 function segMornS(){return NSS*Math.max(DNS,DMS)+(1-NSS)*Math.max(DRS,DMS);}
