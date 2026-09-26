@@ -284,7 +284,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
       <div class="ctl"><label>Rate ₹ / km <b id="rpkOut">19</b></label><input type="range" id="rpk" min="0" max="60" step="1" value="19"></div>
       <div class="ctl"><label>Orders / vehicle / day <b id="opdOut">3</b></label><input type="range" id="opd" min="1" max="8" step="0.5" value="3"></div>
       <div class="ctl"><label for="target">Target ₹ / vehicle / day</label><input class="numin" type="number" id="target" value="1500" step="50"></div>
-      <div class="ctl"><label>Evening surge (after 3 PM) <b id="surgeOut">0%</b></label><input type="range" id="surge" min="0" max="25" step="0.5" value="0"></div>
+      <div class="ctl"><label>Evening surge (after 3 PM)</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgt="pct">%</button><button class="segbtn" data-sgt="flat">Flat ₹</button></div></div>
+      <div class="ctl" id="surgePctCtl"><label>Surge % <b id="surgeOut">0%</b></label><input type="range" id="surge" min="0" max="25" step="0.5" value="0"></div>
+      <div class="ctl" id="surgeFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="surgeFlatOut">₹0</b></label><input type="range" id="surgeFlat" min="0" max="200" step="5" value="0"></div>
       <div class="ctl"><label>New-customer share <b id="nsOut">6%</b></label><input type="range" id="nshare" min="0" max="60" step="1" value="6"></div>
       <div class="ctl"><label>New-customer discount <b id="dnOut">21%</b></label><input type="range" id="dnew" min="0" max="50" step="1" value="21"></div>
       <div class="ctl"><label>Retained discount <b id="drOut">22%</b></label><input type="range" id="dret" min="0" max="50" step="1" value="22"></div>
@@ -439,8 +441,10 @@ const avgDist=distSum/total, mDist=mDistSum/mOrdTot, eDist=eDistSum/eOrdTot;
 let OPD=3,TARGET=1500,SURGE=0,SESS='evening';
 let NEWSHARE=0.06,DNEW=0.21,DRET=0.22,DMORN=0; // discount mix (real 15d defaults); morning discount default 0
 const mornAOV=()=>{let t=0;for(const b of BK)t+=mOrders[b]*iFare(AVGKM[b]);return t/mOrdTot;};   // morning: no surge
-const eveAOV=s=>{let t=0;for(const b of BK)t+=eOrders[b]*iFare(AVGKM[b])*(1+s);return t/eOrdTot;}; // evening: + surge
-const grossAOV=s=>(mOrdTot*mornAOV()+eOrdTot*eveAOV(s))/total;
+let SURGE_TYPE='pct', SURGE_FLAT=0;                       // evening surge: '%' lift or flat ₹ add
+const evAdj=f=>SURGE_TYPE==='flat'?f+SURGE_FLAT:f*(1+SURGE);
+const eveAOV=()=>{let t=0;for(const b of BK)t+=eOrders[b]*evAdj(iFare(AVGKM[b]));return t/eOrdTot;};
+const grossAOV=()=>(mOrdTot*mornAOV()+eOrdTot*eveAOV())/total;
 // each ride takes the HIGHER of its segment discount and (morning only) the morning discount — never stacked
 const segEveDisc=()=>NEWSHARE*DNEW+(1-NEWSHARE)*DRET;                                  // evening: segment only
 const segMornDisc=()=>NEWSHARE*Math.max(DNEW,DMORN)+(1-NEWSHARE)*Math.max(DRET,DMORN); // morning: max(segment, morning)
@@ -449,13 +453,13 @@ const blendedDisc=()=>MDISC_FRAC*segMornDisc()+(1-MDISC_FRAC)*segEveDisc();
 function money(v){return "₹"+Math.round(v).toLocaleString("en-IN");}
 function tpill(pd){const d=pd-TARGET;if(Math.abs(d)/TARGET<=0.01)return `<span class="pill good">on target</span>`;return d>0?`<span class="pill good">+${money(d)}/day</span>`:`<span class="pill bad">${money(-d)}/day short</span>`;}
 function renderKPIs(){
-  const gAOV=grossAOV(SURGE), gDay=gAOV*OPD, eff=gAOV/avgDist;
-  const mAOV=mornAOV(), eAOV=eveAOV(SURGE);
+  const gAOV=grossAOV(), gDay=gAOV*OPD, eff=gAOV/avgDist;
+  const mAOV=mornAOV(), eAOV=eveAOV();
   const disc=blendedDisc(), nAOV=gAOV*(1-disc), nDay=nAOV*OPD;
   window.SIM_KPI={mAOV:mAOV,eAOV:eAOV,gAOV:gAOV,disc:disc,gDay:gDay,nAOV:nAOV,nDay:nDay,eff:eff};
   document.getElementById('ekpis').innerHTML=`
     <div class="ekpi"><div class="lab">Morning AOV</div><div class="val mono">${money(mAOV)}</div><div class="sub2">avg ${mDist.toFixed(1)} km · no surge</div></div>
-    <div class="ekpi"><div class="lab">Evening AOV</div><div class="val mono">${money(eAOV)}</div><div class="sub2">avg ${eDist.toFixed(1)} km${SURGE>0?' · +'+(SURGE*100).toFixed(0)+'% surge':''}</div></div>
+    <div class="ekpi"><div class="lab">Evening AOV</div><div class="val mono">${money(eAOV)}</div><div class="sub2">avg ${eDist.toFixed(1)} km${SURGE_TYPE==='flat'?(SURGE_FLAT>0?' · +'+money(SURGE_FLAT)+' flat':''):(SURGE>0?' · +'+(SURGE*100).toFixed(0)+'% surge':'')}</div></div>
     <div class="ekpi"><div class="lab">Blended AOV</div><div class="val mono">${money(gAOV)}</div><div class="sub2">${Math.round(mOrdTot/total*100)}% AM · ${Math.round(eOrdTot/total*100)}% PM · eff ${money(eff)}/km</div></div>
     <div class="ekpi"><div class="lab">Gross ₹/vehicle/day</div><div class="val mono">${money(gDay)}</div><div class="sub2">driver earning · ${tpill(gDay)}</div></div>
     <div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">${(disc*100).toFixed(1)}%</div><div class="sub2">${(DNEW*100).toFixed(0)}% new · ${(DRET*100).toFixed(0)}% ret · ${(DMORN*100).toFixed(0)}% &lt;1PM · higher wins</div></div>
@@ -463,7 +467,7 @@ function renderKPIs(){
     <div class="ekpi"><div class="lab">Net ₹/vehicle/day</div><div class="val mono" style="color:var(--accent)">${money(nDay)}</div><div class="sub2">ILine realization · ${tpill(nDay)}</div></div>`;
 }
 function drawChart(){
-  const eve=SESS==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,mult=eve?1+SURGE:1;
+  const eve=SESS==='evening',comp=eve?COMP_E:COMP,raov=eve?RAOV_E:RAOV,ev=f=>eve?evAdj(f):f;
   const W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=eve?1750:1500;
   const X=km=>pad.l+(km/kmMax)*(W-pad.l-pad.r),Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Price ladder ${SESS}">`;
@@ -471,11 +475,11 @@ function drawChart(){
   for(let km=0;km<=kmMax;km+=10){s+=`<text class="axlab" x="${X(km)}" y="${H-pad.b+15}" text-anchor="middle">${km}km</text>`;}
   const pts=BK.filter(b=>AVGKM[b]<=kmMax).map(b=>({x:AVGKM[b],lo:Math.min(comp[b].P,comp[b].D,comp[b].U),hi:Math.max(comp[b].P,comp[b].D,comp[b].U)}));
   s+=`<polygon points="${pts.map(p=>X(p.x)+','+Y(Math.min(p.hi,yMax))).join(' ')} ${pts.slice().reverse().map(p=>X(p.x)+','+Y(p.lo)).join(' ')}" fill="var(--delh)" opacity="0.16"/>`;
-  let d=''; for(let km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(iFare(km)*mult,yMax))+' ';}
+  let d=''; for(let km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(iFare(km)),yMax))+' ';}
   s+=`<path class="mline" d="${d}" stroke="var(--curr)" stroke-width="2.8"/>`;
   // ILine net-of-discount line — session-aware (morning applies max(segment, morning discount))
   const disc = eve ? segEveDisc() : segMornDisc();
-  let dn=''; for(let km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(iFare(km)*mult*(1-disc),yMax))+' ';}
+  let dn=''; for(let km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(ev(iFare(km))*(1-disc),yMax))+' ';}
   s+=`<path class="mline" d="${dn}" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>`;
   for(const b of BK){if(AVGKM[b]>kmMax)continue;const c=comp[b];[['P','porter'],['D','delh'],['U','ud']].forEach(([k,col])=>{s+=`<circle cx="${X(AVGKM[b])}" cy="${Y(Math.min(c[k],yMax))}" r="3" fill="var(--${col})" opacity="0.85"/>`;});}
   for(const b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;const x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+=`<rect x="${x-3.2}" y="${y-3.2}" width="6.4" height="6.4" transform="rotate(45 ${x} ${y})" fill="var(--ink)"/>`;}
@@ -483,7 +487,7 @@ function drawChart(){
 }
 function renderCompareTable(){
   const eve=SESS==='evening';
-  const comp=eve?COMP_E:COMP, mult=eve?(1+SURGE):1, disc=eve?segEveDisc():segMornDisc();
+  const comp=eve?COMP_E:COMP, ev=f=>eve?evAdj(f):f, disc=eve?segEveDisc():segMornDisc();
   const so=eve?eOrders:mOrders; let soT=0; for(const b of BK) soT+=so[b];
   const col=v=> v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';
   const pct=v=>`${v>0?'+':''}${Math.round(v*100)}%`;
@@ -491,7 +495,7 @@ function renderCompareTable(){
   let cP=0,cD=0,cU=0,cheapW=0,gW=0,nW=0;
   for(const b of BK){
     const km=SCRAPE_KM[b];                                   // price ILine at the scrape's avg distance
-    const g=iFare(km)*mult, n=g*(1-disc), c=comp[b], cheap=Math.min(c.P,c.D,c.U);
+    const g=ev(iFare(km)), n=g*(1-disc), c=comp[b], cheap=Math.min(c.P,c.D,c.U);
     const dC=n/cheap-1, dP=n/c.P-1, w=so[b];
     cP+=w*c.P;cD+=w*c.D;cU+=w*c.U;cheapW+=w*cheap;gW+=w*g;nW+=w*n;
     const tr=document.createElement('tr');
@@ -515,6 +519,8 @@ document.getElementById('rpk').addEventListener('input',e=>{RPK=+e.target.value;
 document.getElementById('opd').addEventListener('input',e=>{OPD=+e.target.value;document.getElementById('opdOut').textContent=OPD;renderAll();});
 document.getElementById('target').addEventListener('input',e=>{TARGET=+e.target.value||0;renderAll();});
 document.getElementById('surge').addEventListener('input',e=>{SURGE=+e.target.value/100;document.getElementById('surgeOut').textContent=(+e.target.value).toFixed(1)+'%';renderAll();});
+document.getElementById('surgeFlat').addEventListener('input',e=>{SURGE_FLAT=+e.target.value;document.getElementById('surgeFlatOut').textContent='₹'+SURGE_FLAT;renderAll();});
+document.querySelectorAll('.segbtn[data-sgt]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segbtn[data-sgt]').forEach(x=>x.classList.remove('active'));b.classList.add('active');SURGE_TYPE=b.dataset.sgt;document.getElementById('surgePctCtl').hidden=SURGE_TYPE!=='pct';document.getElementById('surgeFlatCtl').hidden=SURGE_TYPE!=='flat';renderAll();}));
 document.getElementById('nshare').addEventListener('input',e=>{NEWSHARE=+e.target.value/100;document.getElementById('nsOut').textContent=e.target.value+'%';renderAll();});
 document.getElementById('dnew').addEventListener('input',e=>{DNEW=+e.target.value/100;document.getElementById('dnOut').textContent=e.target.value+'%';renderAll();});
 document.getElementById('dret').addEventListener('input',e=>{DRET=+e.target.value/100;document.getElementById('drOut').textContent=e.target.value+'%';renderAll();});
@@ -596,15 +602,15 @@ var LOGKEY='iline_pricing_config_log_v1',configLog=[];
 try{var _st=localStorage.getItem(LOGKEY);if(_st)configLog=JSON.parse(_st)||[];}catch(e){}
 function updateSaveCount(){var n=configLog.length;document.querySelectorAll('.saveCount').forEach(function(s){s.textContent='('+n+')';});}
 function nowStamp(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
-var CSV_COLS=['saved_at','mode','session','base_fare','rate_per_km','opd','target_gross_per_day','target_net_per_day','evening_surge_pct','new_share_pct','acquisition_disc_pct','retention_disc_pct','morning_disc_pct','morning_aov','evening_aov','blended_aov','blended_disc_pct','gross_per_day','net_aov','net_per_day','target_net_aov','required_gross_aov','effective_rs_per_km','iline_gross_blended','iline_net_blended','vs_cheapest_pct','vs_porter_pct'];
+var CSV_COLS=['saved_at','mode','session','base_fare','rate_per_km','opd','target_gross_per_day','target_net_per_day','evening_surge_pct','evening_surge_type','evening_flat_surge','new_share_pct','acquisition_disc_pct','retention_disc_pct','morning_disc_pct','morning_aov','evening_aov','blended_aov','blended_disc_pct','gross_per_day','net_aov','net_per_day','target_net_aov','required_gross_aov','effective_rs_per_km','iline_gross_blended','iline_net_blended','vs_cheapest_pct','vs_porter_pct'];
 function saveConfig(mode,btn){
   var row;
   if(mode==='Simulator'){var k=window.SIM_KPI||{},cm=window.SIM_COMP||{};
-    row={saved_at:nowStamp(),mode:mode,session:SESS,base_fare:Math.round(BASE),rate_per_km:RPK,opd:OPD,target_gross_per_day:TARGET,target_net_per_day:'',evening_surge_pct:(SURGE*100).toFixed(1),new_share_pct:Math.round(NEWSHARE*100),acquisition_disc_pct:Math.round(DNEW*100),retention_disc_pct:Math.round(DRET*100),morning_disc_pct:Math.round(DMORN*100),morning_aov:Math.round(k.mAOV||0),evening_aov:Math.round(k.eAOV||0),blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round(k.gDay||0),net_aov:Math.round(k.nAOV||0),net_per_day:Math.round(k.nDay||0),target_net_aov:'',required_gross_aov:'',effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+    row={saved_at:nowStamp(),mode:mode,session:SESS,base_fare:Math.round(BASE),rate_per_km:RPK,opd:OPD,target_gross_per_day:TARGET,target_net_per_day:'',evening_surge_pct:(SURGE*100).toFixed(1),evening_surge_type:SURGE_TYPE,evening_flat_surge:(SURGE_TYPE==='flat'?SURGE_FLAT:''),new_share_pct:Math.round(NEWSHARE*100),acquisition_disc_pct:Math.round(DNEW*100),retention_disc_pct:Math.round(DRET*100),morning_disc_pct:Math.round(DMORN*100),morning_aov:Math.round(k.mAOV||0),evening_aov:Math.round(k.eAOV||0),blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round(k.gDay||0),net_aov:Math.round(k.nAOV||0),net_per_day:Math.round(k.nDay||0),target_net_aov:'',required_gross_aov:'',effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }else{var sp=mode==='Target Sep';
     var k=sp?(window.TGT_KPI_S||{}):(window.TGT_KPI||{}),cm=sp?(window.TGT_COMP_S||{}):(window.TGT_COMP||{});
     var bs=sp?BASES:BASE2,rt=sp?RATES:RPK2,op=sp?OPDTS:OPDT,tn=sp?TNRS:TNR,sg=sp?SGS:T_SG,ns=sp?NSS:T_NS,dn=sp?DNS:T_DN,dr=sp?DRS:T_DR,dm=sp?DMS:T_DM,se=sp?SESSS:SESS2;
-    row={saved_at:nowStamp(),mode:mode,session:se,base_fare:Math.round(bs),rate_per_km:+rt.toFixed(1),opd:op,target_gross_per_day:'',target_net_per_day:tn,evening_surge_pct:(sg*100).toFixed(1),new_share_pct:Math.round(ns*100),acquisition_disc_pct:Math.round(dn*100),retention_disc_pct:Math.round(dr*100),morning_disc_pct:Math.round(dm*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*op),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+    row={saved_at:nowStamp(),mode:mode,session:se,base_fare:Math.round(bs),rate_per_km:+rt.toFixed(1),opd:op,target_gross_per_day:'',target_net_per_day:tn,evening_surge_pct:(sg*100).toFixed(1),evening_surge_type:'pct',evening_flat_surge:'',new_share_pct:Math.round(ns*100),acquisition_disc_pct:Math.round(dn*100),retention_disc_pct:Math.round(dr*100),morning_disc_pct:Math.round(dm*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*op),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }
   configLog.push(row);try{localStorage.setItem(LOGKEY,JSON.stringify(configLog));}catch(e){}updateSaveCount();
   if(btn){var t=btn.textContent;btn.textContent='Saved ✓';setTimeout(function(){btn.textContent=t;},900);}
