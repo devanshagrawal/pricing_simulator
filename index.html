@@ -344,9 +344,21 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgt2="pct">%</button><button class="segbtn" data-sgt2="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sg2PctCtl"><label>Surge % <b id="sg2Out">0%</b></label><input type="range" id="surge2" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sg2FlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sg2FlatOut">₹0</b></label><input type="range" id="surge2Flat" min="0" max="200" step="5" value="0"></div>
-          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move either — the other solves to keep AOV on target ↓</div>
+          <div class="ctl"><label>Tariff mode</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-tmode="single">Single rate</button><button class="segbtn" data-tmode="slab">Slab rates</button></div></div>
           <div class="ctl"><label>Base fare ₹ <b id="base2Out">235</b></label><input type="range" id="base2" min="0" max="700" step="5" value="235"></div>
+          <div id="singleRateT">
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move base or rate — the other solves to hit target ↓</div>
           <div class="ctl"><label>Rate ₹ / km <b id="rpk2Out">30</b></label><input type="range" id="rpk2" min="0" max="80" step="1" value="30"></div>
+          </div>
+          <div id="slabShapeT" hidden>
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 2px">Slab shape — rates auto-scale to hit target</div>
+          <div class="ctl"><label>0–5 km <b id="sh2Out0">₹—</b></label><input type="range" class="sh2" data-i="0" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>5–10 km <b id="sh2Out1">₹—</b></label><input type="range" class="sh2" data-i="1" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>10–15 km <b id="sh2Out2">₹—</b></label><input type="range" class="sh2" data-i="2" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>15–25 km <b id="sh2Out3">₹—</b></label><input type="range" class="sh2" data-i="3" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>25–40 km <b id="sh2Out4">₹—</b></label><input type="range" class="sh2" data-i="4" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>40+ km <b id="sh2Out5">₹—</b></label><input type="range" class="sh2" data-i="5" min="0.3" max="2" step="0.05" value="1"></div>
+          </div>
         </div>
       </aside>
       <div class="sim-right">
@@ -543,10 +555,13 @@ function tEv(f){return T_SGTYPE==='flat'?f+T_SGFLAT:f*(1+T_SG);}
 function tA(){return T_SGTYPE==='flat'?1:1+T_SG*eOrdTot/total;}
 function tD(){return T_SGTYPE==='flat'?(mDistSum+eDistSum)/total:(mDistSum+(1+T_SG)*eDistSum)/total;}
 function tFLAT(){return T_SGTYPE==='flat'?T_SGFLAT*eOrdTot/total:0;}
-function tFare(km){return BASE2+RPK2*km;}
-function grossAOV_T(){return BASE2*tA()+RPK2*tD()+tFLAT();}
+var MODE_T='single',SH_T=[1,1,1,1,1,1],k_T=19;
+function tCharge(km){return SH_T[0]*Math.min(km,5)+SH_T[1]*Math.max(Math.min(km,10)-5,0)+SH_T[2]*Math.max(Math.min(km,15)-10,0)+SH_T[3]*Math.max(Math.min(km,25)-15,0)+SH_T[4]*Math.max(Math.min(km,40)-25,0)+SH_T[5]*Math.max(km-40,0);}
+function tFare(km){return MODE_T==='slab'?BASE2+k_T*tCharge(km):BASE2+RPK2*km;}
+function grossAOV_T(){var t=0,b;for(b of BK){var f=tFare(AVGKM[b]);t+=mOrders[b]*f+eOrders[b]*tEv(f);}return t/total;}
 function solveT(){var netAOV=TNR/OPDT,disc=tBlended(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=tA(),D=tD(),F=tFLAT();
-  if(LASTFREE==='base'){RPK2=Math.max((reqGross-F-BASE2*A)/D,0);}else{BASE2=Math.max((reqGross-F-RPK2*D)/A,0);}
+  if(MODE_T==='slab'){var Sk=0,b,evm=(T_SGTYPE==='flat')?1:(1+T_SG);for(b of BK)Sk+=(mOrders[b]+eOrders[b]*evm)*tCharge(AVGKM[b]);Sk/=total;k_T=Sk>0?Math.max((reqGross-BASE2*A-F)/Sk,0):0;}
+  else if(LASTFREE==='base'){RPK2=Math.max((reqGross-F-BASE2*A)/D,0);}else{BASE2=Math.max((reqGross-F-RPK2*D)/A,0);}
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function tpill2(nDay){var d=nDay-TNR;if(Math.abs(d)/TNR<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function renderTargetTable(){
@@ -580,7 +595,8 @@ function renderTargetChart(){
 }
 function renderTarget(){
   var r=solveT(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
-  if(LASTFREE==='base'){document.getElementById('rpk2').value=Math.round(RPK2);document.getElementById('rpk2Out').textContent='₹'+RPK2.toFixed(1);}
+  if(MODE_T==='slab'){for(var si=0;si<6;si++){var el=document.getElementById('sh2Out'+si);if(el)el.textContent='₹'+(k_T*SH_T[si]).toFixed(1);}document.getElementById('base2Out').textContent='₹'+Math.round(BASE2);}
+  else if(LASTFREE==='base'){document.getElementById('rpk2').value=Math.round(RPK2);document.getElementById('rpk2Out').textContent='₹'+RPK2.toFixed(1);}
   else{document.getElementById('base2').value=Math.round(BASE2/5)*5;document.getElementById('base2Out').textContent='₹'+Math.round(BASE2);}
   var gAOV=grossAOV_T(),nDay=gAOV*(1-disc)*OPDT;window.TGT_KPI={netAOV:netAOV,disc:disc,reqGross:reqGross,eff:reqGross/AVGD,gAOV:gAOV,nDay:nDay};
   document.getElementById('ekpis2').innerHTML=
@@ -588,7 +604,7 @@ function renderTarget(){
   +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(T_DN*100).toFixed(0)+'% acq &middot; '+(T_DR*100).toFixed(0)+'% ret &middot; '+(T_DM*100).toFixed(0)+'% &lt;1PM</div></div>'
   +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
   +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
-  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASE2)+' + &#8377;'+RPK2.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(T_SGTYPE==='flat'?(T_SGFLAT>0?' &middot; +₹'+T_SGFLAT+' eve':''):(T_SG>0?' &middot; +'+(T_SG*100).toFixed(0)+'% eve':''))+'</div></div>'
+  +'<div class="ekpi"><div class="lab">'+(MODE_T==='slab'?'Solved slab ₹/km':'Solved tariff')+'</div><div class="val mono" style="font-size:'+(MODE_T==='slab'?'15px':'19px')+'">'+(MODE_T==='slab'?SH_T.map(function(s){return Math.round(k_T*s);}).join('/'):'&#8377;'+Math.round(BASE2)+' + &#8377;'+RPK2.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span>')+'</div><div class="sub2">'+(MODE_T==='slab'?'base &#8377;'+Math.round(BASE2)+' · 0-5…40+':'move one &middot; other solves')+(T_SGTYPE==='flat'?(T_SGFLAT>0?' &middot; +₹'+T_SGFLAT+' eve':''):(T_SG>0?' &middot; +'+(T_SG*100).toFixed(0)+'% eve':''))+'</div></div>'
   +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+tpill2(nDay)+'</div></div>';
   renderTargetTable();renderTargetChart();
 }
@@ -603,6 +619,8 @@ document.getElementById('surge2Flat').addEventListener('input',function(e){T_SGF
 document.querySelectorAll('.segbtn[data-sgt2]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-sgt2]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');T_SGTYPE=b.dataset.sgt2;document.getElementById('sg2PctCtl').hidden=T_SGTYPE!=='pct';document.getElementById('sg2FlatCtl').hidden=T_SGTYPE!=='flat';renderTarget();});});
 document.getElementById('base2').addEventListener('input',function(e){BASE2=+e.target.value;LASTFREE='base';document.getElementById('base2Out').textContent='₹'+BASE2;renderTarget();});
 document.getElementById('rpk2').addEventListener('input',function(e){RPK2=+e.target.value;LASTFREE='rpk';document.getElementById('rpk2Out').textContent='₹'+RPK2;renderTarget();});
+document.querySelectorAll('.segbtn[data-tmode]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-tmode]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');MODE_T=b.dataset.tmode;document.getElementById('singleRateT').hidden=MODE_T!=='single';document.getElementById('slabShapeT').hidden=MODE_T!=='slab';renderTarget();});});
+document.querySelectorAll('.sh2').forEach(function(sl){sl.addEventListener('input',function(){SH_T[+sl.dataset.i]=+sl.value;renderTarget();});});
 document.querySelectorAll('.segbtn[data-tsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-tsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESS2=b.dataset.tsess;renderTarget();});});
 renderTarget();
 
