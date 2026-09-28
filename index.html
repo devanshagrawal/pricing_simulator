@@ -405,9 +405,21 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgtsep="pct">%</button><button class="segbtn" data-sgtsep="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sgSPctCtl"><label>Surge % <b id="sgOutS">0%</b></label><input type="range" id="surgeS" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sgSFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sgSFlatOut">₹0</b></label><input type="range" id="surgeSFlat" min="0" max="200" step="5" value="0"></div>
-          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move either — the other solves to keep AOV on target ↓</div>
+          <div class="ctl"><label>Tariff mode</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-smode="single">Single rate</button><button class="segbtn" data-smode="slab">Slab rates</button></div></div>
           <div class="ctl"><label>Base fare ₹ <b id="baseOutS">235</b></label><input type="range" id="baseS" min="0" max="700" step="5" value="235"></div>
+          <div id="singleRateS">
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move base or rate — the other solves to hit target ↓</div>
           <div class="ctl"><label>Rate ₹ / km <b id="rateOutS">30</b></label><input type="range" id="rateS" min="0" max="80" step="1" value="30"></div>
+          </div>
+          <div id="slabShapeS" hidden>
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 2px">Slab shape — rates auto-scale to hit target</div>
+          <div class="ctl"><label>0–5 km <b id="shSOut0">₹—</b></label><input type="range" class="shS" data-i="0" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>5–10 km <b id="shSOut1">₹—</b></label><input type="range" class="shS" data-i="1" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>10–15 km <b id="shSOut2">₹—</b></label><input type="range" class="shS" data-i="2" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>15–25 km <b id="shSOut3">₹—</b></label><input type="range" class="shS" data-i="3" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>25–40 km <b id="shSOut4">₹—</b></label><input type="range" class="shS" data-i="4" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>40+ km <b id="shSOut5">₹—</b></label><input type="range" class="shS" data-i="5" min="0.3" max="2" step="0.05" value="1"></div>
+          </div>
         </div>
       </aside>
       <div class="sim-right">
@@ -667,10 +679,13 @@ function sEv(f){return SGSTYPE==='flat'?f+SGSFLAT:f*(1+SGS);}
 function aMultS(){return SGSTYPE==='flat'?1:1+SGS*eOrdTot/total;}
 function dDistS(){return SGSTYPE==='flat'?(mDistSum+eDistSum)/total:(mDistSum+(1+SGS)*eDistSum)/total;}
 function sFLAT(){return SGSTYPE==='flat'?SGSFLAT*eOrdTot/total:0;}
-function fareS(km){return BASES+RATES*km;}
-function grossS(){return BASES*aMultS()+RATES*dDistS()+sFLAT();}
+var MODE_S='single',SH_S=[1,1,1,1,1,1],k_S=19;
+function sCharge(km){return SH_S[0]*Math.min(km,5)+SH_S[1]*Math.max(Math.min(km,10)-5,0)+SH_S[2]*Math.max(Math.min(km,15)-10,0)+SH_S[3]*Math.max(Math.min(km,25)-15,0)+SH_S[4]*Math.max(Math.min(km,40)-25,0)+SH_S[5]*Math.max(km-40,0);}
+function fareS(km){return MODE_S==='slab'?BASES+k_S*sCharge(km):BASES+RATES*km;}
+function grossS(){var t=0,b;for(b of BK){var f=fareS(AVGKM[b]);t+=mOrders[b]*f+eOrders[b]*sEv(f);}return t/total;}
 function solveTS(){var netAOV=TNRS/OPDTS,disc=blendedS(),reqGross=disc>=1?netAOV:netAOV/(1-disc),A=aMultS(),D=dDistS(),F=sFLAT();
-  if(LASTFREES==='base'){RATES=Math.max((reqGross-F-BASES*A)/D,0);}else{BASES=Math.max((reqGross-F-RATES*D)/A,0);}
+  if(MODE_S==='slab'){var Sk=0,b,evm=(SGSTYPE==='flat')?1:(1+SGS);for(b of BK)Sk+=(mOrders[b]+eOrders[b]*evm)*sCharge(AVGKM[b]);Sk/=total;k_S=Sk>0?Math.max((reqGross-BASES*A-F)/Sk,0):0;}
+  else if(LASTFREES==='base'){RATES=Math.max((reqGross-F-BASES*A)/D,0);}else{BASES=Math.max((reqGross-F-RATES*D)/A,0);}
   return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
 function pillS(nDay){var d=nDay-TNRS;if(Math.abs(d)/TNRS<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
 function rTableS(){
@@ -704,7 +719,8 @@ function rChartS(){
 }
 function rTargetS(){
   var r=solveTS(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
-  if(LASTFREES==='base'){document.getElementById('rateS').value=Math.round(RATES);document.getElementById('rateOutS').textContent='₹'+RATES.toFixed(1);}
+  if(MODE_S==='slab'){for(var si=0;si<6;si++){var el=document.getElementById('shSOut'+si);if(el)el.textContent='₹'+(k_S*SH_S[si]).toFixed(1);}document.getElementById('baseOutS').textContent='₹'+Math.round(BASES);}
+  else if(LASTFREES==='base'){document.getElementById('rateS').value=Math.round(RATES);document.getElementById('rateOutS').textContent='₹'+RATES.toFixed(1);}
   else{document.getElementById('baseS').value=Math.round(BASES/5)*5;document.getElementById('baseOutS').textContent='₹'+Math.round(BASES);}
   var gAOV=grossS(),nDay=gAOV*(1-disc)*OPDTS;window.TGT_KPI_S={netAOV:netAOV,disc:disc,reqGross:reqGross,eff:reqGross/AVGD,gAOV:gAOV,nDay:nDay};
   document.getElementById('ekpisS').innerHTML=
@@ -712,7 +728,7 @@ function rTargetS(){
   +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(DNS*100).toFixed(0)+'% acq &middot; '+(DRS*100).toFixed(0)+'% ret &middot; '+(DMS*100).toFixed(0)+'% &lt;1PM</div></div>'
   +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
   +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
-  +'<div class="ekpi"><div class="lab">Solved tariff</div><div class="val mono" style="font-size:19px">&#8377;'+Math.round(BASES)+' + &#8377;'+RATES.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span></div><div class="sub2">move one &middot; other solves'+(SGSTYPE==='flat'?(SGSFLAT>0?' &middot; +₹'+SGSFLAT+' eve':''):(SGS>0?' &middot; +'+(SGS*100).toFixed(0)+'% eve':''))+'</div></div>'
+  +'<div class="ekpi"><div class="lab">'+(MODE_S==='slab'?'Solved slab ₹/km':'Solved tariff')+'</div><div class="val mono" style="font-size:'+(MODE_S==='slab'?'15px':'19px')+'">'+(MODE_S==='slab'?SH_S.map(function(s){return Math.round(k_S*s);}).join('/'):'&#8377;'+Math.round(BASES)+' + &#8377;'+RATES.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span>')+'</div><div class="sub2">'+(MODE_S==='slab'?'base &#8377;'+Math.round(BASES)+' · 0-5…40+':'move one &middot; other solves')+(SGSTYPE==='flat'?(SGSFLAT>0?' &middot; +₹'+SGSFLAT+' eve':''):(SGS>0?' &middot; +'+(SGS*100).toFixed(0)+'% eve':''))+'</div></div>'
   +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+pillS(nDay)+'</div></div>';
   rTableS();rChartS();
 }
@@ -727,6 +743,8 @@ document.getElementById('surgeSFlat').addEventListener('input',function(e){SGSFL
 document.querySelectorAll('.segbtn[data-sgtsep]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-sgtsep]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SGSTYPE=b.dataset.sgtsep;document.getElementById('sgSPctCtl').hidden=SGSTYPE!=='pct';document.getElementById('sgSFlatCtl').hidden=SGSTYPE!=='flat';rTargetS();});});
 document.getElementById('baseS').addEventListener('input',function(e){BASES=+e.target.value;LASTFREES='base';document.getElementById('baseOutS').textContent='₹'+BASES;rTargetS();});
 document.getElementById('rateS').addEventListener('input',function(e){RATES=+e.target.value;LASTFREES='rate';document.getElementById('rateOutS').textContent='₹'+RATES;rTargetS();});
+document.querySelectorAll('.segbtn[data-smode]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-smode]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');MODE_S=b.dataset.smode;document.getElementById('singleRateS').hidden=MODE_S!=='single';document.getElementById('slabShapeS').hidden=MODE_S!=='slab';rTargetS();});});
+document.querySelectorAll('.shS').forEach(function(sl){sl.addEventListener('input',function(){SH_S[+sl.dataset.i]=+sl.value;rTargetS();});});
 document.querySelectorAll('.segbtn[data-ssess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-ssess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESSS=b.dataset.ssess;rTargetS();});});
 rTargetS();
 
