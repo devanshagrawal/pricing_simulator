@@ -138,7 +138,7 @@ svg{display:block;width:100%;height:auto}
     <div class="meta">
       <span>Basis: real completed orders</span><span class="dot"></span>
       <span>iline_riderequests_v2</span><span class="dot"></span>
-      <span>Noida · 3W · last 15 days</span><span class="dot"></span>
+      <span>Noida · 3W · single-stop · 30 Oct–13 Nov</span><span class="dot"></span>
       <span>all-day</span>
     </div>
   </header>
@@ -186,11 +186,11 @@ Target: ₹1,500/day  at  breakeven OPD = 3   →   required AOV = ₹500 / orde
     <h2><span class="n">05</span> Data basis</h2>
     <div class="datagrid">
       <div class="k">Table</div><div class="v">iline_riderequests_v2 (V2, is_current_status = true)</div>
-      <div class="k">Population</div><div class="v">cityName = 'Noida', numberOfVehicleType = 3</div>
+      <div class="k">Population</div><div class="v">cityName = 'Noida', numberOfVehicleType = 3, single-stop rides only (one drop)</div>
       <div class="k">Completed</div><div class="v">requestStatus IN ('COMPLETED','ENDED')</div>
-      <div class="k">Fare</div><div class="v">grossFare (GMV, incl. surge / waiting / add-ons)</div>
+      <div class="k">Fare</div><div class="v">baseFare = grossFare less tolls (tolls pass through; surge and add-ons stay in)</div>
       <div class="k">Distance</div><div class="v">distance (trip km), filtered 0 &lt; d ≤ 120</div>
-      <div class="k">Window</div><div class="v">last 15 days (rolling)</div>
+      <div class="k">Window</div><div class="v">30 Oct–13 Nov 2026 (15 days, 11 with rides; no rides 8–11 Nov)</div>
       <div class="k">Time basis</div><div class="v">all-day — a vehicle earns across the whole day</div>
       <div class="k">Morning / evening</div><div class="v">HOUR(bookingCreatedAt) &lt; 15 = morning (IST; no CONVERT_TZ)</div>
     </div>
@@ -204,39 +204,39 @@ Target: ₹1,500/day  at  breakeven OPD = 3   →   required AOV = ₹500 / orde
       <table>
         <thead><tr><th>KM bucket</th><th>orders</th><th>share</th><th>avg km</th><th>Real AOV</th><th>₹ / km</th></tr></thead>
         <tbody>
-          <tr><td>0–5</td><td>65</td><td>17.3%</td><td>2.8</td><td>₹286</td><td>₹102.2</td></tr>
-          <tr><td>5–10</td><td>86</td><td>22.9%</td><td>7.9</td><td>₹369</td><td>₹46.8</td></tr>
-          <tr><td>10–15</td><td>91</td><td>24.3%</td><td>12.6</td><td>₹467</td><td>₹37.2</td></tr>
-          <tr><td>15–20</td><td>55</td><td>14.7%</td><td>17.7</td><td>₹576</td><td>₹32.6</td></tr>
-          <tr><td>20–25</td><td>36</td><td>9.6%</td><td>21.6</td><td>₹667</td><td>₹30.8</td></tr>
-          <tr><td>25–40</td><td>41</td><td>10.9%</td><td>30.6</td><td>₹862</td><td>₹28.2</td></tr>
-          <tr><td>40+</td><td>1</td><td>0.3%</td><td>45.0</td><td>₹1,085</td><td>₹24.1</td></tr>
+          <tr><td>0–5</td><td>54</td><td>15.3%</td><td>2.2</td><td>₹247</td><td>₹110.4</td></tr>
+          <tr><td>5–10</td><td>79</td><td>22.4%</td><td>7.9</td><td>₹357</td><td>₹44.9</td></tr>
+          <tr><td>10–15</td><td>89</td><td>25.3%</td><td>11.9</td><td>₹430</td><td>₹36.3</td></tr>
+          <tr><td>15–20</td><td>75</td><td>21.3%</td><td>17.5</td><td>₹540</td><td>₹30.8</td></tr>
+          <tr><td>20–25</td><td>23</td><td>6.5%</td><td>22.1</td><td>₹651</td><td>₹29.4</td></tr>
+          <tr><td>25–40</td><td>22</td><td>6.3%</td><td>31.7</td><td>₹763</td><td>₹24.1</td></tr>
+          <tr><td>40+</td><td>10</td><td>2.8%</td><td>47.1</td><td>₹1,016</td><td>₹21.6</td></tr>
         </tbody>
-        <tfoot><tr class="foot"><td>Blended</td><td>375</td><td>100%</td><td>13.5</td><td>₹493</td><td>₹36.5</td></tr></tfoot>
+        <tfoot><tr class="foot"><td>Blended</td><td>352</td><td>100%</td><td>13.6</td><td>₹461</td><td>₹33.8</td></tr></tfoot>
       </table>
     </div>
-    <p style="font-size:13px;color:var(--faint);margin-top:8px">The old single 25+ bucket (avg 46 km) was split into 25–40 and 40+. The ₹/km falls from ₹102 to ₹24 across the range — that is the base fare being amortised over distance.</p>
+    <p style="font-size:13px;color:var(--faint);margin-top:8px">Single-stop rides only: 355 of 378 completed rides in the window (23 multi-stop rides and 3 with no usable distance left out; 352 used). Fares are toll-free (baseFare); with tolls the blended AOV is ₹492. The ₹/km falls from ₹110 to ₹22 across the range — that is the base fare being amortised over distance. The 25+ km buckets have 10–22 rides each, so treat them as indicative.</p>
   </section>
 
   <section>
     <h2><span class="n">07</span> The evening-surge lever</h2>
-    <p>ILine currently runs <span class="tag zero">~0% evening surge</span> — at the same distance bucket, evening AOV ≈ morning AOV (within ±3%). The lower <em>overall</em> evening AOV is a distance-mix effect (evening trips are shorter), not a pricing one.</p>
-    <p>The Strategy-B lever is an <strong>evening surge on orders after 3 PM</strong> (~42% of orders), which lifts all-day AOV without touching morning pricing:</p>
+    <p>ILine currently runs <span class="tag zero">~0% evening surge</span> — in the 0–25 km buckets evening AOV is only 2–8% above morning AOV (distance mix inside each bucket). The lower <em>overall</em> evening AOV is a distance-mix effect (evening trips are shorter), not a pricing one.</p>
+    <p>The Strategy-B lever is an <strong>evening surge on orders after 3 PM</strong> (~33% of orders), which lifts all-day AOV without touching morning pricing:</p>
     <div class="formula">all-day AOV(surge) = [ Σ(morning_orders × morning_AOV)
                      + Σ(evening_orders × evening_AOV × (1 + surge)) ] / total_orders
 
 surge to hit target = ( Target/OPD × total − morning_contrib ) / evening_contrib₀ − 1</div>
     <div class="tablewrap">
       <table>
-        <caption>Competitors already run ~17% evening surge, so there is large headroom.</caption>
+        <caption>Competitors ran ~17% evening surge in the 31 Aug scrape, so the ~26% needed here is above that.</caption>
         <thead><tr><th>Evening surge</th><th>All-day AOV</th><th>₹ / vehicle / day</th></tr></thead>
         <tbody>
-          <tr><td>0% (today)</td><td>₹493</td><td>₹1,479</td></tr>
-          <tr class="hit"><td>3.8%</td><td>₹500</td><td>₹1,500</td></tr>
-          <tr><td>5%</td><td>₹502</td><td>₹1,507</td></tr>
-          <tr><td>10%</td><td>₹512</td><td>₹1,535</td></tr>
-          <tr><td>15%</td><td>₹521</td><td>₹1,562</td></tr>
-          <tr><td>17% (market)</td><td>₹525</td><td>₹1,574</td></tr>
+          <tr><td>0% (today)</td><td>₹461</td><td>₹1,383</td></tr>
+          <tr><td>5%</td><td>₹468</td><td>₹1,405</td></tr>
+          <tr><td>10%</td><td>₹476</td><td>₹1,427</td></tr>
+          <tr><td>15%</td><td>₹483</td><td>₹1,450</td></tr>
+          <tr><td>17% (market)</td><td>₹486</td><td>₹1,459</td></tr>
+          <tr class="hit"><td>26.3%</td><td>₹500</td><td>₹1,500</td></tr>
         </tbody>
       </table>
     </div>
@@ -244,9 +244,9 @@ surge to hit target = ( Target/OPD × total − morning_contrib ) / evening_cont
 
   <section>
     <h2><span class="n">08</span> Discount layer</h2>
-    <div class="callout" style="border-left-color:var(--accent)"><strong>The discount finding.</strong> ILine funds a <strong>~22% promo on ~100% of rides</strong> (avg ₹109 on ₹492 gross). The driver still earns the full gross, so the vehicle clears ~₹1,476/day — but ILine's net realization is only <strong>~₹1,149/day, ₹351 under target</strong>. And <strong>94.5% of rides are retained customers</strong> discounted ~22% — the biggest lever is trimming the retained discount, not acquisition.</div>
+    <div class="callout" style="border-left-color:var(--accent)"><em>Figures in this box are from the earlier 15-day window and have not been refreshed.</em> <strong>The discount finding.</strong> ILine funds a <strong>~22% promo on ~100% of rides</strong> (avg ₹109 on ₹492 gross). The driver still earns the full gross, so the vehicle clears ~₹1,476/day — but ILine's net realization is only <strong>~₹1,149/day, ₹351 under target</strong>. And <strong>94.5% of rides are retained customers</strong> discounted ~22% — the biggest lever is trimming the retained discount, not acquisition.</div>
     <div class="formula">Ride discount   =  before 1 PM: max(segment %, morning %)   ·   1 PM onward: segment %   <span style="color:var(--faint)"># higher wins, never stacked</span>
-Blended disc %  =  36.5% (before 1 PM) · [ s_new·max(d_new,d_morn) + s_ret·max(d_ret,d_morn) ]  +  63.5% (1 PM+) · [ s_new·d_new + s_ret·d_ret ]
+Blended disc %  =  44.0% (before 1 PM) · [ s_new·max(d_new,d_morn) + s_ret·max(d_ret,d_morn) ]  +  56.0% (1 PM+) · [ s_new·d_new + s_ret·d_ret ]
 <b>Net AOV</b>         =  Gross AOV × (1 − blended discount %)
 Gross ₹/day     =  Gross AOV × OPD        <span style="color:var(--faint)"># driver earning</span>
 Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># ILine realization</span></div>
@@ -257,13 +257,13 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
     <div class="result">
       <h3>Where ILine stands today</h3>
       <ul>
-        <li>Real AOV ≈ <strong>₹493/order</strong> → ₹493 × 3 = <strong>₹1,479/day</strong> → <strong>₹21 short</strong> of ₹1,500.</li>
-        <li>Decomposition: ₹493 = <strong>13.5 km × ₹36.5/km</strong>; target ₹500 needs <strong>+₹0.5/km</strong> (≈ <strong>+₹7 base fare</strong>).</li>
-        <li>A cost tariff re-solved to hit ₹1,500 under the real mix lands <strong>≈ ILine's current tariff</strong> — current pricing is already at the earnings floor.</li>
-        <li><strong>The evening surge closes the gap on its own:</strong> a <strong>~3.8% surge</strong> (or flat <strong>+₹17/evening order</strong>) → ₹1,500/day, with no change to morning pricing and still below competitors' evening fares.</li>
+        <li>Real AOV ≈ <strong>₹461/order</strong> (toll-free, single-stop) → ₹461 × 3 = <strong>₹1,383/day</strong> → <strong>₹117 short</strong> of ₹1,500. With tolls the AOV is ₹492, which is why earlier versions of this brief showed only ₹21 short.</li>
+        <li>Decomposition: ₹461 ≈ <strong>13.6 km × ₹33.8/km</strong>; target ₹500 needs <strong>+₹2.9/km</strong> (≈ <strong>+₹39 base fare</strong>).</li>
+        <li><strong>An evening surge alone is not enough at this mix:</strong> about <strong>26%</strong> (or a flat <strong>+₹119 per evening order</strong>) would be needed to reach ₹1,500, above the ~17% competitors ran in the 31 Aug scrape.</li>
+        <li>Closing the gap takes a mix: a base-fare or per-km increase (about +₹39 per order on average), a higher OPD, a smaller surge, or a combination. The Target tabs solve for this.</li>
       </ul>
     </div>
-    <p style="margin-top:16px"><strong>Conclusion.</strong> Strategy B does not call for a morning price increase. It calls for introducing a <strong>modest evening surge</strong> (currently zero) on the ~42% of orders after 3 PM. A conservative 5–10% surge clears ₹1,500/day comfortably while keeping ILine the cheapest player in the evening.</p>
+    <p style="margin-top:16px"><strong>Conclusion.</strong> On single-stop rides and toll-free fares, an average vehicle earns about ₹1,383/day at OPD 3, ₹117 short of ₹1,500. A modest evening surge on the ~33% of orders after 3 PM helps but cannot close the gap by itself (about 26% needed). The window is short (11 days with rides) and the 25+ km buckets are thin, so treat it as indicative.</p>
   </section>
 
   <section>
@@ -560,20 +560,20 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
     </div>
   </div>
 
-  <footer>ILine 3-wheeler pricing · Strategy B brief · figures from real completed orders (Noida 3W, last 15 days). Long-haul buckets (25–40, 40+) are thin — treat as indicative.</footer>
+  <footer>ILine 3-wheeler pricing · Strategy B brief · figures from real completed single-stop orders (Noida 3W, 30 Oct–13 Nov). Long-haul buckets (25–40, 40+) are thin — treat as indicative.</footer>
 </div>
 
 <script>
 const BK=["0-5","5-10","10-15","15-20","20-25","25-40","40+"];
-const AVGKM={"0-5":2.8,"5-10":7.9,"10-15":12.6,"15-20":17.7,"20-25":21.6,"25-40":30.6,"40+":45.0}; // ILine real avg km (for AOV/earnings)
+const AVGKM={"0-5":2.2,"5-10":7.9,"10-15":11.9,"15-20":17.5,"20-25":22.1,"25-40":31.7,"40+":47.1}; // ILine real avg km (for AOV/earnings)
 const SCRAPE_KM={"0-5":2.6,"5-10":7.4,"10-15":12.2,"15-20":17.9,"20-25":22.5,"25-40":31.0,"40+":53.4}; // dummy-route avg km (competitor comparison at same distance)
 const COMP={ "0-5":{P:391,D:340,U:402},"5-10":{P:419,D:413,U:493},"10-15":{P:563,D:459,U:498},"15-20":{P:615,D:648,U:557},"20-25":{P:664,D:764,U:558},"25-40":{P:848,D:1011,U:761},"40+":{P:1353,D:1446,U:1126} };
 const COMP_E={ "0-5":{P:498,D:490,U:443},"5-10":{P:600,D:588,U:489},"10-15":{P:626,D:674,U:438},"15-20":{P:871,D:821,U:544},"20-25":{P:959,D:961,U:592},"25-40":{P:1023,D:1087,U:706},"40+":{P:1533,D:1591,U:1137} };
-const RAOV={ "0-5":289,"5-10":369,"10-15":473,"15-20":574,"20-25":661,"25-40":856,"40+":1085 };
-const RAOV_E={ "0-5":283,"5-10":370,"10-15":457,"15-20":579,"20-25":675,"25-40":899,"40+":null };
-const mOrders={ "0-5":28,"5-10":46,"10-15":54,"15-20":33,"20-25":21,"25-40":36,"40+":1 };
-const mAov=RAOV, eOrders={ "0-5":37,"5-10":40,"10-15":37,"15-20":22,"20-25":15,"25-40":5,"40+":0 };
-const eAov={ "0-5":283,"5-10":370,"10-15":457,"15-20":579,"20-25":675,"25-40":899,"40+":0 };
+const RAOV={ "0-5":242,"5-10":349,"10-15":427,"15-20":536,"20-25":636,"25-40":769,"40+":925 };
+const RAOV_E={ "0-5":258,"5-10":367,"10-15":436,"15-20":552,"20-25":687,"25-40":701,"40+":1152 };
+const mOrders={ "0-5":36,"5-10":45,"10-15":56,"15-20":57,"20-25":16,"25-40":20,"40+":6 };
+const mAov=RAOV, eOrders={ "0-5":18,"5-10":34,"10-15":33,"15-20":18,"20-25":7,"25-40":2,"40+":4 };
+const eAov={ "0-5":258,"5-10":367,"10-15":436,"15-20":552,"20-25":687,"25-40":701,"40+":1152 };
 let BASE=235, RPK=19; // ILine tariff: fare = base + rate/km × km  (default ≈ real ₹235 + ₹19/km)
 function iFare(km){return BASE+RPK*km;}
 let total=0,eOrdTot=0,mOrdTot=0,distSum=0,mDistSum=0,eDistSum=0;
@@ -589,7 +589,7 @@ const grossAOV=()=>(mOrdTot*mornAOV()+eOrdTot*eveAOV())/total;
 // each ride takes the HIGHER of its segment discount and (morning only) the morning discount — never stacked
 const segEveDisc=()=>NEWSHARE*DNEW+(1-NEWSHARE)*DRET;                                  // evening: segment only
 const segMornDisc=()=>NEWSHARE*Math.max(DNEW,DMORN)+(1-NEWSHARE)*Math.max(DRET,DMORN); // morning: max(segment, morning)
-const MDISC_FRAC=0.365; // rides created before 1 PM = morning-discount fence (AOV & evening surge stay at 3 PM)
+const MDISC_FRAC=0.44; // rides created before 1 PM = morning-discount fence (AOV & evening surge stay at 3 PM)
 const blendedDisc=()=>MDISC_FRAC*segMornDisc()+(1-MDISC_FRAC)*segEveDisc();
 function money(v){return "₹"+Math.round(v).toLocaleString("en-IN");}
 function tpill(pd){const d=pd-TARGET;if(Math.abs(d)/TARGET<=0.01)return `<span class="pill good">on target</span>`;return d>0?`<span class="pill good">+${money(d)}/day</span>`:`<span class="pill bad">${money(-d)}/day short</span>`;}
@@ -671,7 +671,7 @@ renderAll();
 
 /* ===== Target -> Tariff tab (full discount model + surge) ===== */
 var TNR=1500,OPDT=3,T_NS=0.06,T_DN=0.21,T_DR=0.22,T_DM=0,T_SG=0,BASE2=235,RPK2=30,SESS2='evening',LASTFREE='base';
-var AVGD=avgDist,T_MDF=0.365;
+var AVGD=avgDist,T_MDF=0.44;
 function tSegEve(){return T_NS*T_DN+(1-T_NS)*T_DR;}
 function tSegMorn(){return T_NS*Math.max(T_DN,T_DM)+(1-T_NS)*Math.max(T_DR,T_DM);}
 function tBlended(){return T_MDF*tSegMorn()+(1-T_MDF)*tSegEve();}
