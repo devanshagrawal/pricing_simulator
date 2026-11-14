@@ -290,9 +290,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
       <div class="ctl" id="surgePctCtl"><label>Surge % <b id="surgeOut">0%</b></label><input type="range" id="surge" min="0" max="25" step="0.5" value="0"></div>
       <div class="ctl" id="surgeFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="surgeFlatOut">₹0</b></label><input type="range" id="surgeFlat" min="0" max="200" step="5" value="0"></div>
       <div class="ctl"><label>New-customer share <b id="nsOut">6%</b></label><input type="range" id="nshare" min="0" max="60" step="1" value="6"></div>
-      <div class="ctl"><label>New-customer discount <b id="dnOut">21%</b></label><input type="range" id="dnew" min="0" max="50" step="1" value="21"></div>
-      <div class="ctl"><label>Retained discount <b id="drOut">22%</b></label><input type="range" id="dret" min="0" max="50" step="1" value="22"></div>
-      <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOut">0%</b></label><input type="range" id="dmorn" min="0" max="50" step="1" value="0"></div>
+      <div class="ctl"><label>New-customer discount <b id="dnOut">20%</b></label><input type="range" id="dnew" min="0" max="50" step="1" value="20"></div>
+      <div class="ctl"><label>Retained discount <b id="drOut">10%</b></label><input type="range" id="dret" min="0" max="50" step="1" value="10"></div>
+      <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOut">15%</b></label><input type="range" id="dmorn" min="0" max="50" step="1" value="15"></div>
         </div>
       </aside>
       <div class="sim-right">
@@ -340,9 +340,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label for="tnr">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnr" value="1500" step="50"></div>
           <div class="ctl"><label>Orders / vehicle / day <b id="opdtOut">3</b></label><input type="range" id="opdt" min="1" max="8" step="0.1" value="3"></div>
           <div class="ctl"><label>New-customer share <b id="ns2Out">6%</b></label><input type="range" id="nshare2" min="0" max="60" step="1" value="6"></div>
-          <div class="ctl"><label>Acquisition discount &middot; new <b id="dn2Out">21%</b></label><input type="range" id="dnew2" min="0" max="50" step="1" value="21"></div>
-          <div class="ctl"><label>Retention discount <b id="dr2Out">22%</b></label><input type="range" id="dret2" min="0" max="50" step="1" value="22"></div>
-          <div class="ctl"><label>Morning discount &middot; before 1 PM <b id="dm2Out">0%</b></label><input type="range" id="dmorn2" min="0" max="50" step="1" value="0"></div>
+          <div class="ctl"><label>Acquisition discount &middot; new <b id="dn2Out">20%</b></label><input type="range" id="dnew2" min="0" max="50" step="1" value="20"></div>
+          <div class="ctl"><label>Retention discount <b id="dr2Out">10%</b></label><input type="range" id="dret2" min="0" max="50" step="1" value="10"></div>
+          <div class="ctl"><label>Morning discount &middot; before 1 PM <b id="dm2Out">15%</b></label><input type="range" id="dmorn2" min="0" max="50" step="1" value="15"></div>
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgt2="pct">%</button><button class="segbtn" data-sgt2="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sg2PctCtl"><label>Surge % <b id="sg2Out">0%</b></label><input type="range" id="surge2" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sg2FlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sg2FlatOut">₹0</b></label><input type="range" id="surge2Flat" min="0" max="200" step="5" value="0"></div>
@@ -401,9 +401,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label for="tnrS">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnrS" value="1500" step="50"></div>
           <div class="ctl"><label>Orders / vehicle / day <b id="opdtOutS">3</b></label><input type="range" id="opdtS" min="1" max="8" step="0.1" value="3"></div>
           <div class="ctl"><label>New-customer share <b id="nsOutS">6%</b></label><input type="range" id="nshareS" min="0" max="60" step="1" value="6"></div>
-          <div class="ctl"><label>Acquisition discount · new <b id="dnOutS">21%</b></label><input type="range" id="dnewS" min="0" max="50" step="1" value="21"></div>
-          <div class="ctl"><label>Retention discount <b id="drOutS">22%</b></label><input type="range" id="dretS" min="0" max="50" step="1" value="22"></div>
-          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutS">0%</b></label><input type="range" id="dmornS" min="0" max="50" step="1" value="0"></div>
+          <div class="ctl"><label>Acquisition discount · new <b id="dnOutS">20%</b></label><input type="range" id="dnewS" min="0" max="50" step="1" value="20"></div>
+          <div class="ctl"><label>Retention discount <b id="drOutS">10%</b></label><input type="range" id="dretS" min="0" max="50" step="1" value="10"></div>
+          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutS">15%</b></label><input type="range" id="dmornS" min="0" max="50" step="1" value="15"></div>
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgtsep="pct">%</button><button class="segbtn" data-sgtsep="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sgSPctCtl"><label>Surge % <b id="sgOutS">0%</b></label><input type="range" id="surgeS" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sgSFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sgSFlatOut">₹0</b></label><input type="range" id="surgeSFlat" min="0" max="200" step="5" value="0"></div>
@@ -456,9 +456,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label for="tnrN">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnrN" value="1500" step="50"></div>
           <div class="ctl"><label>Orders / vehicle / day <b id="opdtOutN">3</b></label><input type="range" id="opdtN" min="1" max="8" step="0.1" value="3"></div>
           <div class="ctl"><label>New-customer share <b id="nsOutN">6%</b></label><input type="range" id="nshareN" min="0" max="60" step="1" value="6"></div>
-          <div class="ctl"><label>Acquisition discount · new <b id="dnOutN">21%</b></label><input type="range" id="dnewN" min="0" max="50" step="1" value="21"></div>
-          <div class="ctl"><label>Retention discount <b id="drOutN">22%</b></label><input type="range" id="dretN" min="0" max="50" step="1" value="22"></div>
-          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutN">0%</b></label><input type="range" id="dmornN" min="0" max="50" step="1" value="0"></div>
+          <div class="ctl"><label>Acquisition discount · new <b id="dnOutN">20%</b></label><input type="range" id="dnewN" min="0" max="50" step="1" value="20"></div>
+          <div class="ctl"><label>Retention discount <b id="drOutN">10%</b></label><input type="range" id="dretN" min="0" max="50" step="1" value="10"></div>
+          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutN">15%</b></label><input type="range" id="dmornN" min="0" max="50" step="1" value="15"></div>
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgtn="pct">%</button><button class="segbtn" data-sgtn="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sgNPctCtl"><label>Surge % <b id="sgOutN">0%</b></label><input type="range" id="surgeN" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sgNFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sgNFlatOut">₹0</b></label><input type="range" id="surgeNFlat" min="0" max="200" step="5" value="0"></div>
@@ -512,9 +512,9 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
           <div class="ctl"><label for="tnrV">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnrV" value="1500" step="50"></div>
           <div class="ctl"><label>Orders / vehicle / day <b id="opdtOutV">3</b></label><input type="range" id="opdtV" min="1" max="8" step="0.1" value="3"></div>
           <div class="ctl"><label>New-customer share <b id="nsOutV">6%</b></label><input type="range" id="nshareV" min="0" max="60" step="1" value="6"></div>
-          <div class="ctl"><label>Acquisition discount · new <b id="dnOutV">21%</b></label><input type="range" id="dnewV" min="0" max="50" step="1" value="21"></div>
-          <div class="ctl"><label>Retention discount <b id="drOutV">22%</b></label><input type="range" id="dretV" min="0" max="50" step="1" value="22"></div>
-          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutV">0%</b></label><input type="range" id="dmornV" min="0" max="50" step="1" value="0"></div>
+          <div class="ctl"><label>Acquisition discount · new <b id="dnOutV">20%</b></label><input type="range" id="dnewV" min="0" max="50" step="1" value="20"></div>
+          <div class="ctl"><label>Retention discount <b id="drOutV">10%</b></label><input type="range" id="dretV" min="0" max="50" step="1" value="10"></div>
+          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutV">15%</b></label><input type="range" id="dmornV" min="0" max="50" step="1" value="15"></div>
           <div class="ctl"><label>Evening surge · after 3 PM</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-sgtv="pct">%</button><button class="segbtn" data-sgtv="flat">Flat ₹</button></div></div>
           <div class="ctl" id="sgVPctCtl"><label>Surge % <b id="sgOutV">0%</b></label><input type="range" id="surgeV" min="0" max="25" step="0.5" value="0"></div>
           <div class="ctl" id="sgVFlatCtl" hidden><label>Flat surge ₹ / eve ride <b id="sgVFlatOut">₹0</b></label><input type="range" id="surgeVFlat" min="0" max="200" step="5" value="0"></div>
@@ -583,7 +583,7 @@ let total=0,eOrdTot=0,mOrdTot=0,distSum=0,mDistSum=0,eDistSum=0;
 for(const b of BK){total+=mOrders[b]+eOrders[b];mOrdTot+=mOrders[b];eOrdTot+=eOrders[b];distSum+=(mOrders[b]+eOrders[b])*AVGKM[b];mDistSum+=mOrders[b]*AVGKM[b];eDistSum+=eOrders[b]*AVGKM[b];}
 const avgDist=distSum/total, mDist=mDistSum/mOrdTot, eDist=eDistSum/eOrdTot;
 let OPD=3,TARGET=1500,SURGE=0,SESS='evening';
-let NEWSHARE=0.06,DNEW=0.21,DRET=0.22,DMORN=0; // discount mix (real 15d defaults); morning discount default 0
+let NEWSHARE=0.06,DNEW=0.20,DRET=0.10,DMORN=0.15; // discount mix = live Noida promos (WELCOME 20% new all-day, MORNING 15% retained <1PM, AFTERNOON 10% retained >=1PM); new-customer share from ride data
 const mornAOV=()=>{let t=0;for(const b of BK)t+=mOrders[b]*iFare(AVGKM[b]);return t/mOrdTot;};   // morning: no surge
 let SURGE_TYPE='pct', SURGE_FLAT=0;                       // evening surge: '%' lift or flat ₹ add
 const evAdj=f=>SURGE_TYPE==='flat'?f+SURGE_FLAT:f*(1+SURGE);
@@ -673,7 +673,7 @@ document.querySelectorAll('.segbtn').forEach(b=>b.addEventListener('click',()=>{
 renderAll();
 
 /* ===== Target -> Tariff tab (full discount model + surge) ===== */
-var TNR=1500,OPDT=3,T_NS=0.06,T_DN=0.21,T_DR=0.22,T_DM=0,T_SG=0,BASE2=235,RPK2=30,SESS2='evening',LASTFREE='base';
+var TNR=1500,OPDT=3,T_NS=0.06,T_DN=0.20,T_DR=0.10,T_DM=0.15,T_SG=0,BASE2=235,RPK2=30,SESS2='evening',LASTFREE='base';
 var AVGD=avgDist,T_MDF=0.44;
 function tSegEve(){return T_NS*T_DN+(1-T_NS)*T_DR;}
 function tSegMorn(){return T_NS*Math.max(T_DN,T_DM)+(1-T_NS)*Math.max(T_DR,T_DM);}
@@ -789,7 +789,7 @@ updateSaveCount();
 /* ===== Target Sep tab (25 Sep competitor data; Delhivery = 31 Aug placeholder) ===== */
 var COMP_SEP={ "0-5":{P:250,D:340,U:398},"5-10":{P:334,D:413,U:484},"10-15":{P:372,D:459,U:501},"15-20":{P:532,D:648,U:551},"20-25":{P:662,D:764,U:559},"25-40":{P:825,D:1011,U:767},"40+":{P:1206,D:1446,U:1130} };
 var COMP_E_SEP={ "0-5":{P:351,D:490,U:448},"5-10":{P:450,D:588,U:497},"10-15":{P:472,D:674,U:442},"15-20":{P:657,D:821,U:543},"20-25":{P:749,D:961,U:588},"25-40":{P:875,D:1087,U:747},"40+":{P:1214,D:1591,U:1146} };
-var TNRS=1500,OPDTS=3,NSS=0.06,DNS=0.21,DRS=0.22,DMS=0,SGS=0,BASES=235,RATES=30,SESSS='evening',LASTFREES='base';
+var TNRS=1500,OPDTS=3,NSS=0.06,DNS=0.20,DRS=0.10,DMS=0.15,SGS=0,BASES=235,RATES=30,SESSS='evening',LASTFREES='base';
 function segEveS(){return NSS*DNS+(1-NSS)*DRS;}
 function segMornS(){return NSS*Math.max(DNS,DMS)+(1-NSS)*Math.max(DRS,DMS);}
 function blendedS(){return T_MDF*segMornS()+(1-T_MDF)*segEveS();}
@@ -868,7 +868,7 @@ document.querySelectorAll('.segbtn[data-ssess]').forEach(function(b){b.addEventL
 rTargetS();
 var COMP_30={ "0-5":{P:247,D:340,U:400},"5-10":{P:348,D:413,U:478},"10-15":{P:492,D:459,U:494},"15-20":{P:607,D:648,U:533},"20-25":{P:674,D:764,U:569},"25-40":{P:702,D:1011,U:760},"40+":{P:1012,D:1446,U:1150} };
 var COMP_E_30={ "0-5":{P:341,D:490,U:442},"5-10":{P:407,D:588,U:489},"10-15":{P:524,D:674,U:434},"15-20":{P:612,D:821,U:538},"20-25":{P:714,D:961,U:592},"25-40":{P:718,D:1087,U:707},"40+":{P:1214,D:1591,U:1190} };
-var TNRN=1500,OPDTN=3,NSN=0.06,DNN=0.21,DRN=0.22,DMN=0,SGN=0,BASEN=235,RATEN=30,SESSN='evening',LASTFREEN='base';
+var TNRN=1500,OPDTN=3,NSN=0.06,DNN=0.20,DRN=0.10,DMN=0.15,SGN=0,BASEN=235,RATEN=30,SESSN='evening',LASTFREEN='base';
 function segEveN(){return NSN*DNN+(1-NSN)*DRN;}
 function segMornN(){return NSN*Math.max(DNN,DMN)+(1-NSN)*Math.max(DRN,DMN);}
 function blendedN(){return T_MDF*segMornN()+(1-T_MDF)*segEveN();}
@@ -950,7 +950,7 @@ var RT_12={"M":[[0.7,294],[1.8,396],[2.1,341],[3.4,347],[4.8,369],[5.3,378],[6.2
 var RG_12={"M":{"0-5":[294,347,430,531],"5-10":[299,371,524,528],"10-15":[375,495,769,902],"15-20":[417,569,641,701],"20-25":[472,709,726,826],"25-40":[716,784,963,1082],"40+":[867,1058,1383,1960]},"E":{"0-5":[334,338,351,458],"5-10":[394,407,459,496],"10-15":[384,463,769,866],"15-20":[417,531,626,688],"20-25":[418,687,738,796],"25-40":[669,673,881,1043],"40+":[867,962,1221,1749]}}; // Porter route fares (toll-adjusted) [km,fare]; per-bucket [min,p25,p75,max]
 var COMP_12={ "0-5":{P:407},"5-10":{P:446},"10-15":{P:513},"15-20":{P:640},"20-25":{P:718},"25-40":{P:841},"40+":{P:1209} };
 var COMP_E_12={ "0-5":{P:344},"5-10":{P:447},"10-15":{P:484},"15-20":{P:610},"20-25":{P:712},"25-40":{P:778},"40+":{P:1048} };
-var TNRV=1500,OPDTV=3,NSV=0.06,DNV=0.21,DRV=0.22,DMV=0,SGV=0,BASEV=235,RATEV=30,SESSV='evening',LASTFREEV='base';
+var TNRV=1500,OPDTV=3,NSV=0.06,DNV=0.20,DRV=0.10,DMV=0.15,SGV=0,BASEV=235,RATEV=30,SESSV='evening',LASTFREEV='base';
 function segEveV(){return NSV*DNV+(1-NSV)*DRV;}
 function segMornV(){return NSV*Math.max(DNV,DMV)+(1-NSV)*Math.max(DRV,DMV);}
 function blendedV(){return T_MDF*segMornV()+(1-T_MDF)*segEveV();}
