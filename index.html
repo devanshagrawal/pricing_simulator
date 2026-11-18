@@ -151,6 +151,7 @@ svg{display:block;width:100%;height:auto}
     <button class="tabbtn" data-tab="target-sep">Target Sep</button>
     <button class="tabbtn" data-tab="target-30">Target 30Sep</button>
     <button class="tabbtn" data-tab="target-12">Target 12Nov</button>
+    <button class="tabbtn" data-tab="target-17">Target 17Nov</button>
   </div>
 
   <div id="tab-data">
@@ -566,6 +567,67 @@ Net ₹/day       =  Net AOV × OPD          <span style="color:var(--faint)"># 
       </div>
     </div>
   </div>
+  <div id="tab-target-17" hidden>
+    <div class="sim">
+      <aside class="sim-left">
+        <h3 style="margin-top:0">Target → Tariff · 17 Nov</h3>
+        <div class="controls-col">
+          <div class="ctl"><label for="tnrW">Target NET ₹ / vehicle / day</label><input class="numin" type="number" id="tnrW" value="1500" step="50"></div>
+          <div class="ctl"><label>Orders / vehicle / day <b id="opdtOutW">3</b></label><input type="range" id="opdtW" min="1" max="8" step="0.1" value="3"></div>
+          <div class="ctl"><label>New-customer share <b id="nsOutW">6%</b></label><input type="range" id="nshareW" min="0" max="60" step="1" value="6"></div>
+          <div class="ctl"><label>Acquisition discount · new <b id="dnOutW">20%</b></label><input type="range" id="dnewW" min="0" max="50" step="1" value="20"></div>
+          <div class="ctl"><label>Retention discount <b id="drOutW">10%</b></label><input type="range" id="dretW" min="0" max="50" step="1" value="10"></div>
+          <div class="ctl"><label>Morning discount · before 1 PM <b id="dmOutW">15%</b></label><input type="range" id="dmornW" min="0" max="50" step="1" value="15"></div>
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:6px 0 0">Surge module</div>
+          <div class="ctl"><label>Surge type</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-smw="ratio">Ratio ×</button><button class="segbtn" data-smw="flat">Flat ₹</button></div></div>
+          <div class="ctl" id="smWRatioCtl"><label>Surge ratio <b id="smWRatioOut">1.0×</b></label><input type="range" id="smWRatio" min="0" max="5" step="0.1" value="1"></div>
+          <div class="ctl" id="smWFlatCtl" hidden><label>Flat surge ₹ / ride <b id="smWFlatOut">₹0</b></label><input type="range" id="smWFlat" min="0" max="300" step="5" value="0"></div>
+          <div class="ctl"><label>Surge time slots</label><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;font-size:12.5px;color:var(--ink)"><label style="display:flex;gap:5px;align-items:center;font-weight:500;text-transform:none;letter-spacing:0"><input type="checkbox" class="smWslot" data-s="0">Till 1 PM</label><label style="display:flex;gap:5px;align-items:center;font-weight:500;text-transform:none;letter-spacing:0"><input type="checkbox" class="smWslot" data-s="1">1–3 PM</label><label style="display:flex;gap:5px;align-items:center;font-weight:500;text-transform:none;letter-spacing:0"><input type="checkbox" class="smWslot" data-s="2" checked>After 3 PM</label></div></div>
+          <div class="ctl"><label>Surge distance band</label><div style="display:flex;gap:8px;margin-top:5px;align-items:center"><input class="numin" style="width:66px" type="number" id="smWmin" value="0" min="0" step="1"><span style="color:var(--muted);font-size:12px">to</span><input class="numin" style="width:66px" type="number" id="smWmax" value="100" min="0" step="1"><span style="color:var(--muted);font-size:12px">km</span></div></div>
+          <div class="ctl"><label>Tariff mode</label><div class="seg" style="margin-top:3px;align-self:flex-start"><button class="segbtn active" data-wmode="single">Single rate</button><button class="segbtn" data-wmode="slab">Slab rates</button></div></div>
+          <div class="ctl"><button class="sbtn" type="button" id="liveBtnW">Load live Noida tariff · 14 Nov</button><div id="liveNoteW" style="font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45" hidden>Live Noida 3W tariff from Mongo (tierpricings, updated 14 Nov 08:00): base ₹200; ₹20/km to 5 km, ₹20 to 10, ₹16 to 15, ₹20 to 25, ₹11 to 40, ₹23 beyond. Rates are <b>fixed, not solved to target</b>; the net ₹/day shows what a vehicle earns at this tariff. Drop charge (₹65 per extra drop) and loading/unloading are not in these fares.</div></div>
+          <div class="ctl"><label>Base fare ₹ <b id="baseOutW">235</b></label><input type="range" id="baseW" min="0" max="700" step="5" value="235"></div>
+          <div id="singleRateW">
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 0">Move base or rate — the other solves to hit target ↓</div>
+          <div class="ctl"><label>Rate ₹ / km <b id="rateOutW">30</b></label><input type="range" id="rateW" min="0" max="80" step="1" value="30"></div>
+          </div>
+          <div id="slabShapeW" hidden>
+          <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin:4px 0 2px">Slab shape — rates auto-scale to hit target</div>
+          <div class="ctl"><label>0–5 km <b id="shWOut0">₹—</b></label><input type="range" class="shW" data-i="0" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>5–10 km <b id="shWOut1">₹—</b></label><input type="range" class="shW" data-i="1" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>10–15 km <b id="shWOut2">₹—</b></label><input type="range" class="shW" data-i="2" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>15–25 km <b id="shWOut3">₹—</b></label><input type="range" class="shW" data-i="3" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>25–40 km <b id="shWOut4">₹—</b></label><input type="range" class="shW" data-i="4" min="0.3" max="2" step="0.05" value="1"></div>
+          <div class="ctl"><label>40+ km <b id="shWOut5">₹—</b></label><input type="range" class="shW" data-i="5" min="0.3" max="2" step="0.05" value="1"></div>
+          </div>
+        </div>
+      </aside>
+      <div class="sim-right">
+        <div class="savebar"><button class="sbtn" onclick="saveConfig('Target 17Nov',this)">Save config</button><button class="sbtn" onclick="exportCSV()">Export CSV <span class="saveCount">(0)</span></button><button class="sbtn ghost" onclick="clearLog()">Clear log</button></div>
+        <div class="ekpis" id="ekpisW"></div>
+        <h3>ILine net price vs Porter · 17 Nov</h3>
+        <p style="font-size:13px;color:var(--faint);margin-top:-2px">17 Nov scrape — <b>Porter only</b> (no Delhivery or Uncle&nbsp;D. benchmark). <b>Porter adjusted</b> for drop-city discounts (Delhi −₹100 / Gurgaon −₹300 / Faridabad −₹200; 34 of 102 routes). Median of 102 routes per bucket and session; 20–25 km has only 4 routes. Priced at scrape avg km; net = gross × (1 − discount). Green = ILine cheaper.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>KM bucket</th><th>km</th><th style="color:var(--porter)">Porter</th><th>ILine gross</th><th>ILine net</th><th>vs Porter</th></tr></thead>
+          <tbody id="cmpBodyW"></tbody>
+          <tfoot><tr class="foot" id="cmpFootW"></tr></tfoot>
+        </table></div>
+        <div class="chartcard">
+          <div class="chart-ctrl"><div class="seg" role="tablist"><button class="segbtn" data-wsess="morning">Morning ≤1PM</button><button class="segbtn" data-wsess="mid">1–3 PM</button><button class="segbtn active" data-wsess="evening">Evening &gt;3PM</button></div><div style="font-size:12px;color:var(--muted)">Fare vs distance · Porter route fares (toll-adjusted)</div></div>
+          <div class="legend">
+          <span><i style="background:var(--porter)"></i>Porter median</span>
+          <span><i class="band" style="background:var(--porter);opacity:.35"></i>25th–75th pct</span>
+          <span><i class="band" style="background:var(--porter);opacity:.15"></i>min–max</span>
+          <span><b style="color:var(--porter)">○</b> each route</span>
+          <span><b style="color:var(--ink)">◆</b> Real AOV</span>
+          <span><i style="background:var(--curr)"></i>ILine tariff</span>
+          <span><span style="display:inline-block;width:15px;border-top:2px dashed var(--accent);vertical-align:middle;margin-right:5px"></span>ILine net <span style="color:var(--faint)">(after discount)</span></span>
+        </div>
+          <div id="chartW"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer>ILine 3-wheeler pricing · Strategy B brief · figures from real completed single-stop orders (Noida 3W, 30 Oct–13 Nov). Long-haul buckets (25–40, 40+) are thin — treat as indicative.</footer>
 </div>
@@ -766,6 +828,8 @@ function saveConfig(mode,btn){
   var row;
   if(mode==='Simulator'){var k=window.SIM_KPI||{},cm=window.SIM_COMP||{};
     row={saved_at:nowStamp(),mode:mode,session:SESS,base_fare:Math.round(BASE),tariff_mode:'single',rate_per_km:RPK,slab_0_5:'',slab_5_10:'',slab_10_15:'',slab_15_25:'',slab_25_40:'',slab_40plus:'',opd:OPD,target_gross_per_day:TARGET,target_net_per_day:'',evening_surge_pct:(SURGE*100).toFixed(1),evening_surge_type:SURGE_TYPE,evening_flat_surge:(SURGE_TYPE==='flat'?SURGE_FLAT:''),new_share_pct:Math.round(NEWSHARE*100),acquisition_disc_pct:Math.round(DNEW*100),retention_disc_pct:Math.round(DRET*100),morning_disc_pct:Math.round(DMORN*100),morning_aov:Math.round(k.mAOV||0),evening_aov:Math.round(k.eAOV||0),blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round(k.gDay||0),net_aov:Math.round(k.nAOV||0),net_per_day:Math.round(k.nDay||0),target_net_aov:'',required_gross_aov:'',effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:Math.round((cm.vsCheap||0)*100),vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
+  }else if(mode==='Target 17Nov'){var k=window.TGT_KPI_W||{},cm=window.TGT_COMP_W||{},sl=(MODE_W==='slab')?SH_W.map(function(s){return +(k_W*s).toFixed(1);}):['','','','','',''];
+    row={saved_at:nowStamp(),mode:mode,session:SESSW,base_fare:Math.round(BASEW),tariff_mode:(FIXW?'slab-live-noida-14Nov':MODE_W),rate_per_km:(MODE_W==='slab'?'':+RATEW.toFixed(1)),slab_0_5:sl[0],slab_5_10:sl[1],slab_10_15:sl[2],slab_15_25:sl[3],slab_25_40:sl[4],slab_40plus:sl[5],opd:OPDTW,target_gross_per_day:'',target_net_per_day:TNRW,evening_surge_pct:(SMODE_W==='ratio'?RATIOW:''),evening_surge_type:(surgeAnyW()?('surge '+(SMODE_W==='flat'?'+₹'+SFLATW:'×'+RATIOW.toFixed(1))+' '+['≤1PM','1-3PM','>3PM'].filter(function(l,i){return SLOTW[i];}).join(',')+' '+MINKMW+'-'+MAXKMW+'km'):'off'),evening_flat_surge:(SMODE_W==='flat'?SFLATW:''),new_share_pct:Math.round(NSW*100),acquisition_disc_pct:Math.round(DNW*100),retention_disc_pct:Math.round(DRW*100),morning_disc_pct:Math.round(DMW*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*OPDTW),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:'',vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }else if(mode==='Target 12Nov'){var k=window.TGT_KPI_V||{},cm=window.TGT_COMP_V||{},sl=(MODE_V==='slab')?SH_V.map(function(s){return +(k_V*s).toFixed(1);}):['','','','','',''];
     row={saved_at:nowStamp(),mode:mode,session:SESSV,base_fare:Math.round(BASEV),tariff_mode:(FIXV?'slab-live-noida-14Nov':MODE_V),rate_per_km:(MODE_V==='slab'?'':+RATEV.toFixed(1)),slab_0_5:sl[0],slab_5_10:sl[1],slab_10_15:sl[2],slab_15_25:sl[3],slab_25_40:sl[4],slab_40plus:sl[5],opd:OPDTV,target_gross_per_day:'',target_net_per_day:TNRV,evening_surge_pct:(SMODE_V==='ratio'?RATIOV:''),evening_surge_type:(surgeAnyV()?('surge '+(SMODE_V==='flat'?'+₹'+SFLATV:'×'+RATIOV.toFixed(1))+' '+['≤1PM','1-3PM','>3PM'].filter(function(l,i){return SLOTV[i];}).join(',')+' '+MINKMV+'-'+MAXKMV+'km'):'off'),evening_flat_surge:(SMODE_V==='flat'?SFLATV:''),new_share_pct:Math.round(NSV*100),acquisition_disc_pct:Math.round(DNV*100),retention_disc_pct:Math.round(DRV*100),morning_disc_pct:Math.round(DMV*100),morning_aov:'',evening_aov:'',blended_aov:Math.round(k.gAOV||0),blended_disc_pct:((k.disc||0)*100).toFixed(1),gross_per_day:Math.round((k.gAOV||0)*OPDTV),net_aov:Math.round((k.gAOV||0)*(1-(k.disc||0))),net_per_day:Math.round(k.nDay||0),target_net_aov:Math.round(k.netAOV||0),required_gross_aov:Math.round(k.reqGross||0),effective_rs_per_km:(k.eff||0).toFixed(1),iline_gross_blended:Math.round(cm.gross||0),iline_net_blended:Math.round(cm.net||0),vs_cheapest_pct:'',vs_porter_pct:Math.round((cm.vsPorter||0)*100)};
   }else{var t30=mode==='Target 30Sep',sp=mode==='Target Sep';
@@ -1048,6 +1112,102 @@ document.getElementById('liveBtnV').addEventListener('click',function(){if(!FIXV
 document.querySelectorAll('.shV').forEach(function(sl){sl.addEventListener('input',function(){SH_V[+sl.dataset.i]=+sl.value;rTargetV();});});
 document.querySelectorAll('.segbtn[data-vsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-vsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESSV=b.dataset.vsess;rTargetV();});});
 rTargetV();
+var COMP_17={ "0-5":{P:348},"5-10":{P:404},"10-15":{P:500},"15-20":{P:640},"20-25":{P:773},"25-40":{P:811},"40+":{P:1209} };
+var COMP_E_17={ "0-5":{P:346},"5-10":{P:512},"10-15":{P:578},"15-20":{P:688},"20-25":{P:829},"25-40":{P:864},"40+":{P:992} };
+var TNRW=1500,OPDTW=3,NSW=0.06,DNW=0.20,DRW=0.10,DMW=0.15,SGW=0,BASEW=235,RATEW=30,SESSW='evening',LASTFREEW='base';
+function segEveW(){return NSW*DNW+(1-NSW)*DRW;}
+function segMornW(){return NSW*Math.max(DNW,DMW)+(1-NSW)*Math.max(DRW,DMW);}
+function blendedW(){return T_MDF*segMornW()+(1-T_MDF)*segEveW();}
+var SMODE_W='ratio',RATIOW=1,SFLATW=0,SLOTW=[false,false,true],MINKMW=0,MAXKMW=100;
+var SLOT_ORDW={ "0-5":[25,11,18],"5-10":[29,16,34],"10-15":[34,22,33],"15-20":[38,19,18],"20-25":[10,6,7],"25-40":[14,6,2],"40+":[5,1,4] }; // single-stop completed orders per bucket x [<=1PM, 1-3PM, >3PM], 30 Oct-13 Nov
+function surgeOnBucketW(b){return AVGKM[b]>=MINKMW&&AVGKM[b]<=MAXKMW;}
+function surgedFareW(f,b,sl){if(!(SLOTW[sl]&&surgeOnBucketW(b)))return f;return SMODE_W==='flat'?f+SFLATW:f*RATIOW;}
+function surgeCoefW(){var A=0,D=0,Sk=0,F=0,b,sl;for(b of BK){var km=AVGKM[b],vc=vChargeW(km),on=surgeOnBucketW(b);for(sl=0;sl<3;sl++){var c=SLOT_ORDW[b][sl],sg=on&&SLOTW[sl],m=(sg&&SMODE_W==='ratio')?RATIOW:1;A+=c*m;D+=c*m*km;Sk+=c*m*vc;if(sg&&SMODE_W==='flat')F+=c*SFLATW;}}return {A:A/total,D:D/total,Sk:Sk/total,F:F/total};}
+function slotIdxW(){return SESSW==='evening'?2:SESSW==='mid'?1:0;}
+function evDispW(f,b){var sl=slotIdxW();return (SLOTW[sl]&&surgeOnBucketW(b))?(SMODE_W==='flat'?f+SFLATW:f*RATIOW):f;}
+function evKmW(f,km){var sl=slotIdxW();return (SLOTW[sl]&&km>=MINKMW&&km<=MAXKMW)?(SMODE_W==='flat'?f+SFLATW:f*RATIOW):f;}
+function surgeAnyW(){return SLOTW.some(function(x){return x;})&&((SMODE_W==='ratio'&&RATIOW!==1)||(SMODE_W==='flat'&&SFLATW>0));}
+function surgeDescW(){if(!surgeAnyW())return '';var lab=['≤1PM','1-3PM','>3PM'].filter(function(l,i){return SLOTW[i];}).join(',');var amt=SMODE_W==='flat'?'+₹'+SFLATW:'×'+RATIOW.toFixed(1);return ' &middot; surge '+amt+' &middot; '+lab+' &middot; '+MINKMW+'-'+MAXKMW+'km';}
+var MODE_W='single',SH_W=[1,1,1,1,1,1],k_W=19;
+var FIXW=false,BASE_BEFORE_W=235;
+function exitFixW(){if(!FIXW)return;FIXW=false;SH_W=[1,1,1,1,1,1];k_W=19;BASEW=BASE_BEFORE_W;document.getElementById('baseW').value=BASEW;document.getElementById('baseOutW').textContent='₹'+BASEW;document.querySelectorAll('.shW').forEach(function(sl){sl.min=0.3;sl.max=2;sl.step=0.05;sl.value=1;});document.getElementById('liveNoteW').hidden=true;}
+function vChargeW(km){return SH_W[0]*Math.min(km,5)+SH_W[1]*Math.max(Math.min(km,10)-5,0)+SH_W[2]*Math.max(Math.min(km,15)-10,0)+SH_W[3]*Math.max(Math.min(km,25)-15,0)+SH_W[4]*Math.max(Math.min(km,40)-25,0)+SH_W[5]*Math.max(km-40,0);}
+function fareW(km){return MODE_W==='slab'?BASEW+k_W*vChargeW(km):BASEW+RATEW*km;}
+function grossW(){var t=0,b,sl;for(b of BK){var f=fareW(AVGKM[b]);for(sl=0;sl<3;sl++)t+=SLOT_ORDW[b][sl]*surgedFareW(f,b,sl);}return t/total;}
+function solveTW(){var netAOV=TNRW/OPDTW,disc=blendedW(),reqGross=disc>=1?netAOV:netAOV/(1-disc),cf=surgeCoefW(),A=cf.A,D=cf.D,F=cf.F;
+  if(FIXW){}else if(MODE_W==='slab'){k_W=cf.Sk>0?Math.max((reqGross-BASEW*A-F)/cf.Sk,0):0;}
+  else if(LASTFREEW==='base'){RATEW=Math.max((reqGross-F-BASEW*A)/D,0);}else{BASEW=Math.max((reqGross-F-RATEW*D)/A,0);}
+  return {netAOV:netAOV,reqGross:reqGross,disc:disc};}
+function pillW(nDay){var d=nDay-TNRW;if(Math.abs(d)/TNRW<=0.01)return '<span class="pill good">on target</span>';return d>0?'<span class="pill good">+'+money(d)+'/day</span>':'<span class="pill bad">'+money(-d)+'/day short</span>';}
+function rTableW(){
+  var eve=SESSW==='evening',morn=SESSW==='morning',comp=eve?COMP_E_17:COMP_17,disc=morn?segMornW():segEveW(),so=eve?eOrders:mOrders,soT=0,b;for(b of BK)soT+=so[b];
+  var col=function(v){return v<=-0.005?'var(--good)':v>=0.005?'var(--bad)':'var(--muted)';};
+  var pct=function(v){return (v>0?'+':'')+Math.round(v*100)+'%';};
+  var body=document.getElementById('cmpBodyW');body.innerHTML='';
+  var cP=0,gW=0,nW=0;
+  for(b of BK){var km=SCRAPE_KM[b],g=evDispW(fareW(km),b),n=g*(1-disc),c=comp[b],dP=n/c.P-1,w=so[b];
+    cP+=w*c.P;gW+=w*g;nW+=w*n;
+    body.insertAdjacentHTML('beforeend','<tr><td>'+b+' km</td><td style="color:var(--muted)">'+km+'</td><td>'+money(c.P)+'</td><td style="color:var(--muted)">'+money(g)+'</td><td style="font-weight:700">'+money(n)+'</td><td style="color:'+col(dP)+';font-weight:600">'+pct(dP)+'</td></tr>');}
+  cP/=soT;gW/=soT;nW/=soT;var dp=nW/cP-1;window.TGT_COMP_W={gross:gW,net:nW,vsCheap:null,vsPorter:dp};
+  document.getElementById('cmpFootW').innerHTML='<td>Blended</td><td></td><td>'+money(cP)+'</td><td>'+money(gW)+'</td><td>'+money(nW)+'</td><td style="color:'+col(dp)+'">'+pct(dp)+'</td>';
+}
+function rChartW(){
+  var eve=SESSW==='evening',morn=SESSW==='morning',comp=eve?COMP_E_17:COMP_17,raov=eve?RAOV_E:RAOV,disc=morn?segMornW():segEveW(),b,km,v;
+  var W=1000,H=330,pad={l:54,r:18,t:12,b:34},kmMax=60,yMax=2000,step=250;
+  var X=function(km){return pad.l+(km/kmMax)*(W-pad.l-pad.r);},Y=function(v){return H-pad.b-(v/yMax)*(H-pad.t-pad.b);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  for(v=0;v<=yMax;v+=step){s+='<line class="gridline" x1="'+pad.l+'" y1="'+Y(v)+'" x2="'+(W-pad.r)+'" y2="'+Y(v)+'"/><text class="axlab" x="'+(pad.l-8)+'" y="'+(Y(v)+3)+'" text-anchor="end">₹'+v+'</text>';}
+  for(km=0;km<=kmMax;km+=10){s+='<text class="axlab" x="'+X(km)+'" y="'+(H-pad.b+15)+'" text-anchor="middle">'+km+'km</text>';}
+  var rk=eve?'E':'M',rg=RG_12[rk],rb=BK.filter(function(b){return rg[b]&&SCRAPE_KM[b]<=kmMax;});
+  var bandU=rb.map(function(b,i){return (i?'L':'M')+X(SCRAPE_KM[b])+' '+Y(Math.min(rg[b][3],yMax));}),bandL=rb.slice().reverse().map(function(b){return 'L'+X(SCRAPE_KM[b])+' '+Y(rg[b][0]);});
+  s+='<path d="'+bandU.join(' ')+' '+bandL.join(' ')+' Z" fill="var(--porter)" opacity="0.12"/>';
+  var iqU=rb.map(function(b,i){return (i?'L':'M')+X(SCRAPE_KM[b])+' '+Y(Math.min(rg[b][2],yMax));}),iqL=rb.slice().reverse().map(function(b){return 'L'+X(SCRAPE_KM[b])+' '+Y(rg[b][1]);});
+  s+='<path d="'+iqU.join(' ')+' '+iqL.join(' ')+' Z" fill="var(--porter)" opacity="0.18"/>';
+  RT_12[rk].forEach(function(p){if(p[0]<=kmMax)s+='<circle cx="'+X(p[0])+'" cy="'+Y(Math.min(p[1],yMax))+'" r="2.4" fill="none" stroke="var(--porter)" stroke-width="1" opacity="0.7"/>';});
+  var pts=rb.map(function(b){return {x:SCRAPE_KM[b],p:comp[b].P};});
+  s+='<path class="mline" d="'+pts.map(function(p,i){return (i?'L':'M')+X(p.x)+' '+Y(Math.min(p.p,yMax));}).join(' ')+'" stroke="var(--porter)" stroke-width="1.8" opacity="0.85"/>';
+  var d='';for(km=0;km<=kmMax;km+=0.5){d+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(evKmW(fareW(km),km),yMax))+' ';}
+  s+='<path class="mline" d="'+d+'" stroke="var(--curr)" stroke-width="2.8"/>';
+  var dn='';for(km=0;km<=kmMax;km+=0.5){dn+=(km===0?'M':'L')+X(km)+' '+Y(Math.min(evKmW(fareW(km),km)*(1-disc),yMax))+' ';}
+  s+='<path class="mline" d="'+dn+'" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/>';
+  for(b of BK){if(SCRAPE_KM[b]>kmMax)continue;var c=comp[b];[['P','porter']].forEach(function(pair){s+='<circle cx="'+X(SCRAPE_KM[b])+'" cy="'+Y(Math.min(c[pair[0]],yMax))+'" r="3.6" fill="var(--'+pair[1]+')"/>';});}
+  for(b of BK){if(AVGKM[b]>kmMax||raov[b]==null)continue;var x=X(AVGKM[b]),y=Y(Math.min(raov[b],yMax));s+='<rect x="'+(x-3.2)+'" y="'+(y-3.2)+'" width="6.4" height="6.4" transform="rotate(45 '+x+' '+y+')" fill="var(--ink)"/>';}
+  document.getElementById('chartW').innerHTML=s+'</svg>';
+}
+function rTargetW(){
+  var r=solveTW(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
+  if(MODE_W==='slab'){for(var si=0;si<6;si++){var el=document.getElementById('shVOut'+si);if(el)el.textContent='₹'+(k_W*SH_W[si]).toFixed(1);}document.getElementById('baseOutW').textContent='₹'+Math.round(BASEW);}
+  else if(LASTFREEW==='base'){document.getElementById('rateW').value=Math.round(RATEW);document.getElementById('rateOutW').textContent='₹'+RATEW.toFixed(1);}
+  else{document.getElementById('baseW').value=Math.round(BASEW/5)*5;document.getElementById('baseOutW').textContent='₹'+Math.round(BASEW);}
+  var gAOV=grossW(),nDay=gAOV*(1-disc)*OPDTW;window.TGT_KPI_W={netAOV:netAOV,disc:disc,reqGross:reqGross,eff:reqGross/AVGD,gAOV:gAOV,nDay:nDay};
+  document.getElementById('ekpisW').innerHTML=
+   '<div class="ekpi"><div class="lab">Target net AOV</div><div class="val mono">'+money(netAOV)+'</div><div class="sub2">'+money(TNRW)+'/day / OPD '+OPDTW+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Blended discount</div><div class="val mono" style="color:var(--accent)">'+(disc*100).toFixed(1)+'%</div><div class="sub2">'+(DNW*100).toFixed(0)+'% acq &middot; '+(DRW*100).toFixed(0)+'% ret &middot; '+(DMW*100).toFixed(0)+'% &lt;1PM</div></div>'
+  +'<div class="ekpi"><div class="lab">Required gross AOV</div><div class="val mono">'+money(reqGross)+'</div><div class="sub2">net / (1 - '+(disc*100).toFixed(1)+'%)</div></div>'
+  +'<div class="ekpi"><div class="lab">Effective &#8377;/km</div><div class="val mono">'+money(reqGross/AVGD)+'</div><div class="sub2">gross / '+AVGD.toFixed(1)+' km</div></div>'
+  +'<div class="ekpi"><div class="lab">'+(FIXW?'Live slab ₹/km':MODE_W==='slab'?'Solved slab ₹/km':'Solved tariff')+'</div><div class="val mono" style="font-size:'+(MODE_W==='slab'?'15px':'19px')+'">'+(MODE_W==='slab'?SH_W.map(function(s){return Math.round(k_W*s);}).join('/'):'&#8377;'+Math.round(BASEW)+' + &#8377;'+RATEW.toFixed(1)+'<span style="font-size:13px;color:var(--muted)">/km</span>')+'</div><div class="sub2">'+(FIXW?'base &#8377;'+Math.round(BASEW)+' · fixed, not solved':MODE_W==='slab'?'base &#8377;'+Math.round(BASEW)+' · 0-5…40+':'move one &middot; other solves')+surgeDescW()+'</div></div>'
+  +'<div class="ekpi"><div class="lab">Net &#8377;/vehicle/day</div><div class="val mono" style="color:var(--accent)">'+money(nDay)+'</div><div class="sub2">'+pillW(nDay)+'</div></div>';
+  rTableW();rChartW();
+}
+document.getElementById('tnrW').addEventListener('input',function(e){TNRW=+e.target.value||0;rTargetW();});
+document.getElementById('opdtW').addEventListener('input',function(e){OPDTW=+e.target.value;document.getElementById('opdtOutW').textContent=OPDTW;rTargetW();});
+document.getElementById('nshareW').addEventListener('input',function(e){NSW=+e.target.value/100;document.getElementById('nsOutW').textContent=e.target.value+'%';rTargetW();});
+document.getElementById('dnewW').addEventListener('input',function(e){DNW=+e.target.value/100;document.getElementById('dnOutW').textContent=e.target.value+'%';rTargetW();});
+document.getElementById('dretW').addEventListener('input',function(e){DRW=+e.target.value/100;document.getElementById('drOutW').textContent=e.target.value+'%';rTargetW();});
+document.getElementById('dmornW').addEventListener('input',function(e){DMW=+e.target.value/100;document.getElementById('dmOutW').textContent=e.target.value+'%';rTargetW();});
+document.getElementById('smWRatio').addEventListener('input',function(e){RATIOW=+e.target.value;document.getElementById('smWRatioOut').textContent=(+e.target.value).toFixed(1)+'×';rTargetW();});
+document.getElementById('smWFlat').addEventListener('input',function(e){SFLATW=+e.target.value;document.getElementById('smWFlatOut').textContent='₹'+SFLATW;rTargetW();});
+document.querySelectorAll('.segbtn[data-smw]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-smw]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SMODE_W=b.dataset.smw;document.getElementById('smWRatioCtl').hidden=SMODE_W!=='ratio';document.getElementById('smWFlatCtl').hidden=SMODE_W!=='flat';rTargetW();});});
+document.querySelectorAll('.smWslot').forEach(function(cb){cb.addEventListener('change',function(){SLOTW[+cb.dataset.s]=cb.checked;rTargetW();});});
+document.getElementById('smWmin').addEventListener('input',function(e){MINKMW=+e.target.value||0;rTargetW();});
+document.getElementById('smWmax').addEventListener('input',function(e){MAXKMW=+e.target.value||0;rTargetW();});
+document.getElementById('baseW').addEventListener('input',function(e){BASEW=+e.target.value;LASTFREEW='base';document.getElementById('baseOutW').textContent='₹'+BASEW;rTargetW();});
+document.getElementById('rateW').addEventListener('input',function(e){RATEW=+e.target.value;LASTFREEW='rate';document.getElementById('rateOutW').textContent='₹'+RATEW;rTargetW();});
+document.querySelectorAll('.segbtn[data-wmode]').forEach(function(b){b.addEventListener('click',function(){exitFixW();document.querySelectorAll('.segbtn[data-wmode]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');MODE_W=b.dataset.wmode;document.getElementById('singleRateW').hidden=MODE_W!=='single';document.getElementById('slabShapeW').hidden=MODE_W!=='slab';rTargetW();});});
+document.getElementById('liveBtnW').addEventListener('click',function(){if(!FIXW)BASE_BEFORE_W=BASEW;FIXW=true;MODE_W='slab';BASEW=200;k_W=1;SH_W=[20,20,16,20,11,23];LASTFREEW='base';document.querySelectorAll('.segbtn[data-wmode]').forEach(function(x){x.classList.toggle('active',x.dataset.wmode==='slab');});document.getElementById('singleRateW').hidden=true;document.getElementById('slabShapeW').hidden=false;document.querySelectorAll('.shW').forEach(function(sl,i){sl.min=0;sl.max=60;sl.step=0.5;sl.value=SH_W[i];});document.getElementById('baseW').value=BASEW;document.getElementById('liveNoteW').hidden=false;rTargetW();});
+document.querySelectorAll('.shW').forEach(function(sl){sl.addEventListener('input',function(){SH_W[+sl.dataset.i]=+sl.value;rTargetW();});});
+document.querySelectorAll('.segbtn[data-wsess]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.segbtn[data-wsess]').forEach(function(x){x.classList.remove('active');});b.classList.add('active');SESSW=b.dataset.wsess;rTargetW();});});
+rTargetW();
 
 document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
@@ -1058,10 +1218,12 @@ document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>{
   document.getElementById("tab-target-sep").hidden=t!=="target-sep";
   document.getElementById("tab-target-30").hidden=t!=="target-30";
   document.getElementById("tab-target-12").hidden=t!=="target-12";
+  document.getElementById("tab-target-17").hidden=t!=="target-17";
   if(t==="sim")renderAll();
   if(t==="target")renderTarget();
   if(t==="target-sep")rTargetS();
   if(t==="target-30")rTargetN();
   if(t==="target-12")rTargetV();
+  if(t==="target-17")rTargetW();
 }));
 </script>
