@@ -1176,7 +1176,7 @@ function rChartW(){
 }
 function rTargetW(){
   var r=solveTW(),netAOV=r.netAOV,reqGross=r.reqGross,disc=r.disc;
-  if(MODE_W==='slab'){for(var si=0;si<6;si++){var el=document.getElementById('shVOut'+si);if(el)el.textContent='₹'+(k_W*SH_W[si]).toFixed(1);}document.getElementById('baseOutW').textContent='₹'+Math.round(BASEW);}
+  if(MODE_W==='slab'){for(var si=0;si<6;si++){var el=document.getElementById('shWOut'+si);if(el)el.textContent='₹'+(k_W*SH_W[si]).toFixed(1);}document.getElementById('baseOutW').textContent='₹'+Math.round(BASEW);}
   else if(LASTFREEW==='base'){document.getElementById('rateW').value=Math.round(RATEW);document.getElementById('rateOutW').textContent='₹'+RATEW.toFixed(1);}
   else{document.getElementById('baseW').value=Math.round(BASEW/5)*5;document.getElementById('baseOutW').textContent='₹'+Math.round(BASEW);}
   var gAOV=grossW(),nDay=gAOV*(1-disc)*OPDTW;window.TGT_KPI_W={netAOV:netAOV,disc:disc,reqGross:reqGross,eff:reqGross/AVGD,gAOV:gAOV,nDay:nDay};
